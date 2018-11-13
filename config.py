@@ -49,17 +49,17 @@ keep_prob = 0.8
 lr = 0.001
 batch_size = 64
 
-image_size = 300
+image_size = 256
 threads_data = 4
 
-summary_path = "./tensorboard/"
+summary_path = path_checker("./tensorboard/")
 
 
 dataset_size = 2913  # how many images that you have
 epochs = 1000
 iter_max = (dataset_size/batch_size)*epochs
 
-display=1000
+display = 1000
 
 logging.info("\nparameters: device={}\nbatch_normalization={}\nclass_num={}\n"
              "keep_prob={}\nsummary_path={}\nlearning_rate={}\nbatch_size={}\nimage_size={}\nimage_size={}\n"

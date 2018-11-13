@@ -91,6 +91,8 @@ def create_tfrecord(phase, path_):
 
         label_path = path_ + "labels/" + name + ".png"
         label_img = Image.open(label_path)
+        # label_img = np.array(Image.open(label_path).convert('L'), 'f')   # label is gray image
+
         label_ = label_img.resize((image_size, image_size))
         label_raw = label_.tobytes()
 

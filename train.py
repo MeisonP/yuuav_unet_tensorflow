@@ -8,13 +8,15 @@ from load_data import batch_queue
 
 
 def main():
+    # input
+    # this should op by cpu
+    image_batch, label_batch = batch_queue(phase="train")
+
     with tf.device(device), tf.Session() as sess:
         tf.train.start_queue_runners(sess=sess)
 
         #
-        # input
 
-        image_batch, label_batch = batch_queue(phase="train")
 
 
         #
@@ -25,14 +27,18 @@ def main():
         #
         # loss func, related between the output image and label image
         # total loss = segment_loss + l2_regularization
+        label_batch_ = tf.reshape(label_batch, (-1, class_num))
 
-        loss_func = layers.segment_loss(labels_=label_batch, net_output=model['output']) + layers.l2_regular()
-        tf.summary.scalar("loss", loss_func)
+        logging.info("input: {0}  {1}".format(label_batch.shape, image_batch.shape))
+        logging.info("output: {0}  {1}".format(label_batch_.shape, model['output'].shape))
+
+        loss_func = layers.segment_loss(labels_=label_batch_,  net_output=model['output'])  # + layers.l2_regular()
+        # tf.summary.scalar("loss", loss_func)
 
         #
         # acc and summary writer
 
-        acc = layers.acc(model['output'], label_batch)
+        acc = layers.acc(model['output'], label_batch_)
         tf.summary.scalar("segment_acc", acc)
         writer_train = tf.summary.FileWriter(path_checker(summary_path+"train"))
 
@@ -41,17 +47,17 @@ def main():
         #
         # optimization
 
-        optimizer=tf.train.AdamOptimizer(lr)
-        train_op =optimizer.minimize(loss_func)
+        optimizer = tf.train.AdamOptimizer(lr)
+        train_op = optimizer.minimize(loss_func)
 
         #
         # init
-
+        logging.info("initialization...")
         sess.run(tf.global_variables_initializer())
 
         #
         # sess.run, contain test and train
-
+        logging.info("run the Session begin")
         for i in range(0, iter_max):
             if (i+1) % display == 0:  # display at iter
                 loss, acc = sess.run([loss_func, acc])

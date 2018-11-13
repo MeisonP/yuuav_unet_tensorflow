@@ -47,7 +47,7 @@ def example_queue(phase):
     _, serialized_example = reader.read(filename_queue)
     features = tf.parse_single_example(serialized_example,
                                        features={
-                                           'label': tf.FixedLenFeature([], tf.int64),
+                                           'label': tf.FixedLenFeature([], tf.string),
                                            'image_binary': tf.FixedLenFeature([], tf.string)
                                        })
 
@@ -55,8 +55,12 @@ def example_queue(phase):
 
     img_pro = tf.reshape(img, [image_size, image_size, 3])
 
-    example_image = tf.cast(img_pro, tf.float32) * (1./225) - 0.5
-    example_label = tf.cast(features['label'], tf.int32)
+    example_image = tf.cast(img_pro, tf.float32)    # * (1./225) - 0.5
+
+    label_ = tf.decode_raw(features['label'], tf.uint8)
+    label_pro = tf.reshape(label_, [image_size, image_size, 3])
+    example_label = tf.cast(label_pro, tf.float32)
+
     return example_image, example_label
 
 @func_track
