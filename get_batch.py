@@ -13,6 +13,8 @@ Note:
     tf.local_variables_initializer() is needed, and must before the cooord= and threads=
 
 """
+
+
 import tensorflow as tf
 from config import image_size, BS, queue_capacity, epochs
 

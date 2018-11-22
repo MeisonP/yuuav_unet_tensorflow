@@ -17,8 +17,8 @@ Note: the main step as follow
     ***in order to increase the efficiency, the batch queue creating should be a individual thread***
     not forget the tf.local_variables_initializer() at init step
 
-
 """
+
 
 import tensorflow as tf
 from config import *

@@ -13,6 +13,7 @@ Note:
 
 """
 
+
 import tensorflow as tf
 from tensorflow.contrib.layers.python.layers import layers as tf_ctb_layers
 from config import *
