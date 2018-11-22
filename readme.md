@@ -6,7 +6,8 @@ the guild for construct a python project: file structure
 * the config file and flag(commad line arg) just need one of two
 
 ### file structure (5 module)
-* dataset_gen.py >(generator a dataset which prepared for train form raw data)
+* dataset_gen.py 
+> (generator a dataset which prepared for train form raw data)
 
 * config.py
 * unet.py
