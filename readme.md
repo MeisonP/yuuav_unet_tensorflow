@@ -1,11 +1,11 @@
-#README#
+# README#
 the guild for construct a python project: file structure
 
-###how to saperate the modeule
+### how to saperate the modeule
 *the module that mybe replace someday, should be a individule py file
 *the config file and flag(commad line arg) just need one of two
 
-###file structure (5 module)
+### file structure (5 module)
 *dataset_gen.py
 >(generator a dataset which prepared for train form raw data)
 
