@@ -1,4 +1,4 @@
-# README#
+# README
 the guild for construct a python project: file structure
 
 ### how to saperate the modeule
