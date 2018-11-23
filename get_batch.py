@@ -19,7 +19,7 @@ import tensorflow as tf
 from config import image_size, BS, queue_capacity, epochs
 
 
-def batch_input(record_filelist, batch_size=BS):
+def batch_input(record_file, batch_size=BS):
     """core method for input pipeline
     Note:
         capacity:An integer. The maximum number of elements in the queue.
@@ -29,6 +29,8 @@ def batch_input(record_filelist, batch_size=BS):
 
     :param
         record_filelist: A string list, consist of the tfrecords filename list.
+        batch_size: a inter, define how many images  pass to the network each time.
+        and I think the batch_size for the evaluate(val/test) should be much bigger than train
     :return:
         A batch, (a tensor ) with shape (batch_size, image_size, image_size, channel), for rgb, the channel=3
     """
@@ -37,7 +39,7 @@ def batch_input(record_filelist, batch_size=BS):
         'image': tf.FixedLenFeature([], tf.string),
         'mask': tf.FixedLenFeature([], tf.string)}
 
-    filename_queue = tf.train.string_input_producer(record_filelist, num_epochs=epochs)
+    filename_queue = tf.train.string_input_producer([record_file], num_epochs=epochs)
 
     reader = tf.TFRecordReader()
     _, serialized_example = reader.read(filename_queue)

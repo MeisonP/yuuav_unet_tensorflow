@@ -8,6 +8,21 @@ for the tensorflow, the raw dataset format is: images files (src is images, labe
 tensorflow ==1.11
 python ==2.7.15
 
+Note:
+    the dataset structure should be
+    data
+        ---train_dataset
+        ---val_dataset (using for train evaluate during the training,
+                        and do not take part in the  back-propagation)
+        ---test_dataset (same as the evaluate but after the train process as a individual module)
+
+    as using the argparse module , the main() func must have one arg, eg def main(_):
+    how to use the flag: eg,
+    import argparse
+    parser = argparse.ArgumentParser(description='Eval Unet on given tfrecords.')
+    parser.add_argument('--image_size', help='inter, size of reshape', default=256)
+    FLAGS, _ = parser.parse_known_args()    # return  namespace, upparsed args
+    tf.app.run()
 
 """
 
@@ -16,10 +31,11 @@ import tensorflow as tf
 import os
 import cv2
 import sys
+import argparse
 import time
 
 
-def create_tfrecord(record_path_, dataset_path_, process_bar_):
+def create_tfrecord(record_path_, dataset_path_, process_bar_, image_size):
 
     """method, to create a TFrecord file, a byte data files,
     which contains the tf.train.Example() protocol memory block (protocol buffer).
@@ -58,7 +74,7 @@ def create_tfrecord(record_path_, dataset_path_, process_bar_):
     for image_name in os.listdir(dataset_path_ + "src/"):
         name = os.path.splitext(image_name)[0]
 
-        image_path = dataset_path + "src/" + name + ".jpg"
+        image_path = dataset_path_ + "src/" + name + ".jpg"
         image = cv2.imread(image_path)
         image = cv2.resize(image, (image_size, image_size), interpolation=cv2.INTER_LINEAR)
 
@@ -67,7 +83,7 @@ def create_tfrecord(record_path_, dataset_path_, process_bar_):
 
         image_raw = image.tobytes()
 
-        label_path = dataset_path + "labels/" + name + ".png"
+        label_path = dataset_path_ + "labels/" + name + ".png"
         mask = cv2.imread(label_path)
         mask = cv2.resize(mask, (image_size, image_size), interpolation=cv2.INTER_LINEAR)
         mask_raw = mask.tobytes()
@@ -147,17 +163,28 @@ class ShowProcess():
             self.close()
 
 
+def main(_):
+    process_bar_ = ShowProcess(FLAGS.max_steps, 'TFRecords Done!')
+    create_tfrecord(FLAGS.record_path, FLAGS.dataset_path, process_bar_, FLAGS.image_size)
+
+
 if __name__ == "__main__":
-    image_size = 256
 
-    batch_size = 8
-    datset_size = 24
-    max_steps = datset_size
+    parser = argparse.ArgumentParser(description='Eval Unet on given tfrecords.')
 
-    dataset_path = "./data/train/"
-    record_path = "./data/train.tfrecords"
+    parser.add_argument('--image_size', help='inter, size of reshape', default=256)
+    parser.add_argument('--batch_size', help='inter, size of batch', default=8)
+    parser.add_argument('--dataset_size', help='how many images contained in tfrecords file', default=24)
+    parser.add_argument('--max_steps', help='max step for process_bar to show', default=24)  # equal to dataset_size
+    parser.add_argument('--dataset_path', help='the dir of the data folder', required=False, default="./data/train/")
 
-    process_bar = ShowProcess(max_steps, 'TFRecords Done!')
-    create_tfrecord(record_path, dataset_path, process_bar)
+    parser.add_argument('--record_path', '-p', help='path of the created tfrecords file',
+                        required=True, default="./data/train.tfrecords")    # "./data/val.tfrecords"
+
+    FLAGS, _ = parser.parse_known_args()
+
+    tf.app.run()
+
+
 
 

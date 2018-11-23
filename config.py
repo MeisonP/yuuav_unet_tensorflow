@@ -39,7 +39,7 @@ class ShowProcess():
         "info when done..."
     """
 
-    def __init__(self, max_steps, infoDone = 'Done'):
+    def __init__(self, max_steps, info_done='Done'):
         """class param init.
         :param max_steps: inter, how many step for process
             max_arrow: inter, the total num arrow
@@ -49,24 +49,32 @@ class ShowProcess():
         self.max_steps = max_steps
         self.max_arrow = 50
         self.i = 0
-        self.infoDone = infoDone
+        self.info_done = info_done
 
     def close(self):
         """
         print info, when finished
         """
         print('')
-        print(self.infoDone)
+        print(self.info_done)
         self.i = 0
 
-    def show_process(self, i):
+    def show_process(self, i,
+                     epoch_i, epoch_images,
+                     loss_train, acc_train,
+                     loss_val, acc_val):
         """ core method, show the process bar.
         Note:
             1. calculate how many >
             2. calculate how may -
             3. calculate the percentage: "\r" must be at left ,means that begin form left
             4. sys.stdout.write(process_bar) and sys.stdout.flush() is to print to terminal
-        :param i: inter, the step right now, init set to 0
+        :param
+            i: inter, the step right now, init set to 0, total step== num of images for each epoch
+            epoch_i: inter, show the current processed epoch
+            epoch_images: inter, the num of total images for each epoch
+            loss_train, acc_train: loss and acc for current calculation batch
+            loss_vel, acc_vel: test at validate dataset, test at given iter, eg: each 1000 batch iter
         :return: no return
 
         """
@@ -77,10 +85,13 @@ class ShowProcess():
             self.i += 1
         num_arrow = int(self.i * self.max_arrow / self.max_steps)
         num_line = self.max_arrow - num_arrow
-        percent = self.i * 100.0 / self.max_steps
 
-        process_bar_ = '\r' + '[' + '>' * num_arrow + ' ' * num_line + ']'\
-                       + '%.2f' % percent + '%'
+        process_bar_ = 'Epoch ' + epoch_i + '/{}'.format(epochs) + '\n'\
+                       + '\r' + '{0}/{1}'.format(i, epoch_images)\
+                       + '[' + '>' * num_arrow + '.' * num_line + ']'\
+                       + ' - ' + 'loss:{}'.format(loss_train) + ' - ' + 'acc:{}'.format(acc_train) + ';'\
+                       + ' - ' + 'loss_vel:{}'.format(loss_val) + ' - ' + 'acc_vel:{}'.format(acc_val)
+
         sys.stdout.write(process_bar_)
         sys.stdout.flush()
         if self.i >= self.max_steps:
@@ -119,19 +130,21 @@ image_size = 256
 dataset_size = 2913
 
 BS = 8  # batch_size
-epochs = 1000
-iter_max = (dataset_size/BS)*epochs
-display = 100
+epochs = 100
+iter_each_epoch = dataset_size/BS
+iter_max = iter_each_epoch*epochs
+val_step = 100
 queue_capacity = 24
 
 num_queue_threads = 4
 
-tfrecord_path_list = ["./data/train.tfrecords"]
+tfrecord_path_train = "./data/train.tfrecords"
+tfrecord_path_val = "./data/val.tfrecords"
 
 
 logging.info("\nparameters: batch_normalization={}\nclass_num={}\n"
              "keep_prob={}\nsummary_path={}\nlearning_rate={}\nbatch_size={}\nimage_size={}\n"
-             "epochs={}\niter_max={}\ndisplay_iter={}\n".
+             "epochs={}\niter_max={}\nval_step={}\n".
              format(bool(batch_normalization), class_num,
                     keep_prob, summary_path, lr, BS, image_size,
-                    epochs, iter_max, display))
+                    epochs, iter_max, val_step))
