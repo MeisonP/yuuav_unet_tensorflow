@@ -129,7 +129,7 @@ lr = 0.001
 image_size = 256
 dataset_size = 2913
 
-BS = 8  # batch_size
+BS = 16  # batch_size
 epochs = 100
 iter_each_epoch = dataset_size/BS
 iter_max = iter_each_epoch*epochs

@@ -79,7 +79,7 @@ def create_tfrecord(record_path_, dataset_path_, process_bar_, image_size):
         image = cv2.resize(image, (image_size, image_size), interpolation=cv2.INTER_LINEAR)
 
         i = count
-        process_bar_.show_process(i)
+        process_bar_. show_process(i)
 
         image_raw = image.tobytes()
 
@@ -164,7 +164,13 @@ class ShowProcess():
 
 
 def main(_):
-    process_bar_ = ShowProcess(FLAGS.max_steps, 'TFRecords Done!')
+    ds = 0
+    for fn in os.listdir(FLAGS.dataset_path + "src/"):
+        ds = ds + 1
+    dataset_size = ds
+    max_steps = dataset_size
+
+    process_bar_ = ShowProcess(max_steps, '{}: TFRecords Done!'.format(FLAGS.record_path))
     create_tfrecord(FLAGS.record_path, FLAGS.dataset_path, process_bar_, FLAGS.image_size)
 
 
@@ -174,11 +180,9 @@ if __name__ == "__main__":
 
     parser.add_argument('--image_size', help='inter, size of reshape', default=256)
     parser.add_argument('--batch_size', help='inter, size of batch', default=8)
-    parser.add_argument('--dataset_size', help='how many images contained in tfrecords file', default=24)
-    parser.add_argument('--max_steps', help='max step for process_bar to show', default=24)  # equal to dataset_size
-    parser.add_argument('--dataset_path', help='the dir of the data folder', required=False, default="./data/train/")
 
-    parser.add_argument('--record_path', '-p', help='path of the created tfrecords file',
+    parser.add_argument('--dataset_path', '-d', help='the dir of the data folder', required=True, default="./data/train/")
+    parser.add_argument('--record_path', '-r', help='path of the created tfrecords file',
                         required=True, default="./data/train.tfrecords")    # "./data/val.tfrecords"
 
     FLAGS, _ = parser.parse_known_args()
