@@ -43,7 +43,7 @@ Note: the main step as follow
     not forget the tf.local_variables_initializer() at init step\
 
 
-    the evaluate happen at the end of each epoch, eg 100 epoch,
+    the evaluate happen at the end of each epoch, eg 100 batch one epoch,
     1-99 are do the train ( pass the train data batch and do back-propagation/ cal gradient),
     and the 100th do the evaluate (pass the val data, and don't do the bp)
 
@@ -58,9 +58,13 @@ import argparse
 
 
 def total_loss(net_output, label, phase):
-    cross_entropy = tf.nn.softmax_cross_entropy_with_logits_v2(labels=label, logits=net_output)
+    """ loss calculate,
+    the  shape of the inout label and logist(the network output) must be same.
+
+    """
+    cross_entropy = tf.nn.softmax_cross_entropy_with_logits(labels=label, logits=net_output)
     segment_loss = cross_entropy
-    tf.summary.scalar("{}_loss".format(phase), segment_loss)
+    # tf.summary.scalar("{}_loss".format(phase), segment_loss)
     return segment_loss
 
 
@@ -96,7 +100,7 @@ def evaluate(sess, loss_val, acc_val, writer_val):
     return loss_val, acc_val
 
 
-def train(sess, loss_train, acc_train, writer_train):
+def train(sess, train_op, loss_train, acc_train, writer_train):
     """ def train_op and run, then add it into the summary
     :arg
         sess: the current tf.Session() Object
@@ -110,9 +114,6 @@ def train(sess, loss_train, acc_train, writer_train):
 
 
     """
-
-    optimizer = tf.train.AdamOptimizer(lr)
-    train_op = optimizer.minimize(loss_train)
 
     sess.run(train_op)
     loss_train, acc_train = sess.run([loss_train, acc_train])
@@ -129,64 +130,42 @@ def main(_):
     """
 
     name_batch, image_batch, label_batch = batch_input(tfrecord_path_train)
-    name_val, image_val, label_val = batch_input(tfrecord_path_val, batch_size=64)
 
-    model_train = unet(input_=image_batch)
-    model_val = unet(input_=image_val)
+    label_batch_ = tf.reshape(label_batch, (-1, 3))
 
-    label_batch_ = tf.reshape(label_batch, (-1, class_num))
-    label_val_ = tf.reshape(label_val, (-1, class_num))
-
+    model_train = unet(image_batch, 'train')
     loss_train = total_loss(model_train['output'], label_batch_, 'train')
-    loss_val = total_loss(model_val['output'], label_val_, 'val')
-
-    acc_train = accuracy(model_train['output'], label_batch_, 'train')
-    acc_val = accuracy(model_val(['output'], label_val, 'val'))
-
-    writer_train = tf.summary.FileWriter(path_checker(summary_path+"train"))
-    writer_val = tf.summary.FileWriter(path_checker(summary_path + "val"))
-    saver = tf.train.Saver()
+    minus = tf.subtract(label_batch_, model_train['output'])
 
     with tf.Session() as sess:
+        names, images, labels = batch_input("./data/train.tfrecords", 8)
+        logging.info('variable initialization')
 
-        logging.info("initialization ...")
-        sess.run([tf.local_variables_initializer(), tf.global_variables_initializer()])
+        sess.run(tf.local_variables_initializer())
+        sess.run(tf.global_variables_initializer())
 
         coord = tf.train.Coordinator()
-        threads = tf.train.start_queue_runners(sess, coord)
-
-        logging.info("run the Session ...")
-
+        threads = tf.train.start_queue_runners(coord=coord)
         try:
             while not coord.should_stop():
-                loss_val, acc_val = None, None
+                logging.info('sess run for image pass to the network, please waite...')
+                sess.run(model_train)
+                logging.info('the shape of the subtract :{}'.format(minus.shpape))
 
-                for epoch_i in range(epochs):
-                    pc_bar = ShowProcess(iter_each_epoch)
-                    for i in range(1, iter_each_epoch+1):   # i =1 ....iter_each_epoch
 
-                        if i != iter_each_epoch:
-                            loss_train, acc_train = train(sess, loss_train, acc_train, writer_train)
-                        else:
-                            loss_val, acc_val = evaluate(sess, loss_val, acc_val, writer_val)
 
-                        pc_bar.show_process(i, epoch_i, iter_each_epoch,
-                                            loss_train, acc_train,
-                                            loss_val, acc_val)
 
+
+                for i in range(2):
+                    names_, images_, labels_ = sess.run([names, images, labels])
+                    print 'filename_in_batch:', names_, "\noutput_batch_shape:", images_.shape
+                print "\nfinished,\nuser request coord stop ! "
                 coord.request_stop()
-
         except tf.errors.OutOfRangeError:
-            logging.info("done! user ask to stop coord-threads")
-
+            print 'done! limit epochs achieved.'
         finally:
             coord.request_stop()
-            logging.info('all threads are asked to stop!')
             coord.join(threads)
-
-        writer_train.close()
-        writer_val.close()
-        saver.save(sess, FLAGS.model_save_path)
 
 
 if __name__ == "__main__":
@@ -194,6 +173,8 @@ if __name__ == "__main__":
     parser.add_argument('--model_save_path', '-m',
                         help="final_model_path",
                         required=True, default='./final_model/')
+
     FLAGS, _ = parser.parse_known_args()
 
-    tf.aap.run()
+    tf.app.run()
+    logging.info("done! ")

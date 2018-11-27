@@ -121,19 +121,18 @@ def path_checker(path):
 summary_path = path_checker("./tensorboard/")
 
 batch_normalization = 1
-class_num = 2
+class_num = 20+1
 classes = [0, 1]
 keep_prob = 0.8
 lr = 0.001
 
 image_size = 256
-dataset_size = 2913
+dataset_size = 132   # 2913
 
-BS = 16  # batch_size
+BS = 1  # batch_size
 epochs = 100
 iter_each_epoch = dataset_size/BS
 iter_max = iter_each_epoch*epochs
-val_step = 100
 queue_capacity = 24
 
 num_queue_threads = 4
@@ -143,8 +142,8 @@ tfrecord_path_val = "./data/val.tfrecords"
 
 
 logging.info("\nparameters: batch_normalization={}\nclass_num={}\n"
-             "keep_prob={}\nsummary_path={}\nlearning_rate={}\nbatch_size={}\nimage_size={}\n"
-             "epochs={}\niter_max={}\nval_step={}\n".
+             "keep_prob={}\nsummary_path={}\nlearning_rate={}\nbatch_size={}\nimage_size={}\ndataset_size={}\n"
+             "epochs={}\niter_max={}\n".
              format(bool(batch_normalization), class_num,
-                    keep_prob, summary_path, lr, BS, image_size,
-                    epochs, iter_max, val_step))
+                    keep_prob, summary_path, lr, BS, image_size,dataset_size,
+                    epochs, iter_max))
