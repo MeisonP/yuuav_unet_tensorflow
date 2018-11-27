@@ -100,7 +100,7 @@ def evaluate(sess, loss_val, acc_val, writer_val):
     return loss_val, acc_val
 
 
-def train(sess, train_op, loss_train, acc_train, writer_train):
+def train(sess, loss_train, acc_train):
     """ def train_op and run, then add it into the summary
     :arg
         sess: the current tf.Session() Object
@@ -115,11 +115,11 @@ def train(sess, train_op, loss_train, acc_train, writer_train):
 
     """
 
-    sess.run(train_op)
+    # sess.run(train_op)
     loss_train, acc_train = sess.run([loss_train, acc_train])
     merged = tf.summary.merge(loss_train, acc_train)
     summary_train = sess.run(merged)
-    writer_train.add_summary(summary_train)
+    # writer_train.add_summary(summary_train)
     return loss_train, acc_train
 
 
@@ -135,7 +135,7 @@ def main(_):
 
     model_train = unet(image_batch, 'train')
     loss_train = total_loss(model_train['output'], label_batch_, 'train')
-    minus = tf.subtract(label_batch_, model_train['output'])
+    acc_train = accuracy(model_train['output'], label_batch_, 'train')
 
     with tf.Session() as sess:
         names, images, labels = batch_input("./data/train.tfrecords", 8)
@@ -149,8 +149,15 @@ def main(_):
         try:
             while not coord.should_stop():
                 logging.info('sess run for image pass to the network, please waite...')
-                sess.run(model_train)
-                logging.info('the shape of the subtract :{}'.format(minus.shpape))
+                pc_bar = ShowProcess(iter_each_epoch, '')
+
+                for epoch_i in range(epochs):
+                    print ('Epoch {}'.format(epoch_i) + '/{}'.format(epochs))
+                    for j in range(1, iter_each_epoch + 1):
+                        loss_train_, acc_train_ = train(sess, loss_train, acc_train)
+                        pc_bar.show_process(j, iter_each_epoch, loss_train_, acc_train_)
+
+
 
 
 

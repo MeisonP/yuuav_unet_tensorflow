@@ -59,10 +59,9 @@ class ShowProcess():
         print(self.info_done)
         self.i = 0
 
-    def show_process(self, i,
-                     epoch_i, epoch_images,
-                     loss_train, acc_train,
-                     loss_val, acc_val):
+    def show_process(self, i, epoch_images,
+                     loss_train, acc_train):
+                     # val, acc_val):
         """ core method, show the process bar.
         Note:
             1. calculate how many >
@@ -83,14 +82,16 @@ class ShowProcess():
             self.i = i
         else:
             self.i += 1
+
+
         num_arrow = int(self.i * self.max_arrow / self.max_steps)
         num_line = self.max_arrow - num_arrow
+        percent = self.i * 100.0 / self.max_steps
 
-        process_bar_ = 'Epoch ' + epoch_i + '/{}'.format(epochs) + '\n'\
-                       + '\r' + '{0}/{1}'.format(i, epoch_images)\
-                       + '[' + '>' * num_arrow + '.' * num_line + ']'\
-                       + ' - ' + 'loss:{}'.format(loss_train) + ' - ' + 'acc:{}'.format(acc_train) + ';'\
-                       + ' - ' + 'loss_vel:{}'.format(loss_val) + ' - ' + 'acc_vel:{}'.format(acc_val)
+        process_bar_ = '\r'\
+                       + '{0}/{1}'.format(i, epoch_images)\
+                       + '[' + '>' * num_arrow + ' ' * num_line + ']' \
+                       + ' - ' + 'loss:{:.4f}'.format(loss_train) + ' - ' + 'acc:{:.4f}'.format(acc_train) + ';'
 
         sys.stdout.write(process_bar_)
         sys.stdout.flush()
@@ -129,8 +130,8 @@ lr = 0.001
 image_size = 256
 dataset_size = 132   # 2913
 
-BS = 1  # batch_size
-epochs = 100
+BS = 8  # batch_size
+epochs = 10
 iter_each_epoch = dataset_size/BS
 iter_max = iter_each_epoch*epochs
 queue_capacity = 24
@@ -145,5 +146,15 @@ logging.info("\nparameters: batch_normalization={}\nclass_num={}\n"
              "keep_prob={}\nsummary_path={}\nlearning_rate={}\nbatch_size={}\nimage_size={}\ndataset_size={}\n"
              "epochs={}\niter_max={}\n".
              format(bool(batch_normalization), class_num,
-                    keep_prob, summary_path, lr, BS, image_size,dataset_size,
+                    keep_prob, summary_path, lr, BS, image_size, dataset_size,
                     epochs, iter_max))
+
+
+if __name__ == '__main__':
+    pc_bar_ = ShowProcess(10, '')
+
+    for epoch_i_ in range(2):
+        print ('Epoch {}'.format(epoch_i_) + '/{}'.format(epochs))
+        for i in range(1,  10+1):
+            pc_bar_.show_process(i, epoch_i_, 1.0, 1.0)
+            time.sleep(1)

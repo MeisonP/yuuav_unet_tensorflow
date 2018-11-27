@@ -126,7 +126,6 @@ def unet(input_, op_name):
         net['conv2_1'] = conv_relu(net['pool1'], 3, 128, "conv2_1")
         net['conv2_2'] = conv_relu(net['conv2_1'], 3, 128, "conv2_2")
         net['pool2]'] = pool(net['conv2_2'], 2, max, 'pool2')
-        net['dropout2'] = dropout(net['conv2_2'], keep_prob, name='dropout2')
 
         # block 3
         net['conv3_1'] = conv_relu(net['pool2]'], 3, 256, "conv3_1")
