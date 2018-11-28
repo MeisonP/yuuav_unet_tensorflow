@@ -81,7 +81,7 @@ def total_loss(net_output, label, phase):
 
     """
     cross_entropy = tf.nn.softmax_cross_entropy_with_logits(labels=label, logits=net_output)
-    segment_loss = cross_entropy
+    segment_loss = tf.reduce_mean(cross_entropy)
     # tf.summary.scalar("{}_loss".format(phase), segment_loss)
     return segment_loss
 
@@ -171,7 +171,7 @@ def main(_):
 
                 coord.request_stop()
         except tf.errors.OutOfRangeError:
-            print 'done! limit epochs achieved.'
+            print '\ndone! limit epochs achieved.'
         finally:
             coord.request_stop()
             coord.join(threads)

@@ -143,10 +143,10 @@ tfrecord_path_val = "./data/val.tfrecords"
 
 logging.info("\nparameters: batch_normalization={}\nclass_num={}\n"
              "keep_prob={}\nsummary_path={}\nlearning_rate={}\nbatch_size={}\nimage_size={}\ndataset_size={}\n"
-             "epochs={}\niter_max={}\n".
+             "epochs={}\niter_each_epoch{}\niter_max={}\n".
              format(bool(batch_normalization), class_num,
                     keep_prob, summary_path, lr, BS, image_size, dataset_size,
-                    epochs, iter_max))
+                    epochs, iter_each_epoch, iter_max))
 
 
 if __name__ == '__main__':

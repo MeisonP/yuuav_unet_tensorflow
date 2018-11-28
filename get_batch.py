@@ -28,7 +28,8 @@ def batch_input(record_file, batch_size=BS):
         batch_size + min_after_dequeue = capacity.
 
         the "num_epochs" of string_input_producer is the limited epochs, means the label of epoch, not the count.
-        eg: epochs=10. then  the limited should be 9 (num_epochs from 0 to 9), so num_epochs=10-1
+        using for queue control, when achieve the limited then report a tf.errors.OutOfRangeError.
+        eg: epochs=10. then who to set num_epochs?
 
     :param
         record_filelist: A string list, consist of the tfrecords filename list.
