@@ -1,5 +1,5 @@
 # coding:utf-8
-"""main interface using for train a unet model (using tensorflow and opencv).
+"""main interface using for evaluate a unet model (using tensorflow and opencv).
 the purpose of this project is to do the satellite-image segmentation. yuuav building
 
 #2018/11/19
@@ -46,13 +46,6 @@ Note: the main step as follow
     the evaluate happen at the end of each epoch, eg 100 batch one epoch,
     1-99 are do the train ( pass the train data batch and do back-propagation/ cal gradient),
     and the 100th do the evaluate (pass the val data, and don't do the bp)
-    optimizer:
-    --GradientDescentOptimizer
-    --AdagradOptimizer
-    --AdagradDAOptimizer
-    --MomentumOptimizer
-    --AdamOptimizer
-
 
 """
 
@@ -67,21 +60,19 @@ import argparse
 def total_loss(net_output, label, phase):
     """ loss calculate,
     the  shape of the inout label and logist(the network output) must be same.
+
     Note:
         tf.nn.softmax_cross_entropy_with_logits output a tensor/ a array,
-        its shape is the same as `labels` except that
-        it does not have the last dimension of `labels`.
 
     :arg
         net_output: a tensor, output after the src image pass through the network
         label: a tensor, shape is same as net_output (x, 3) 3 means RGB channel
     :return
-        a scalar,
-
+        a scalar, softmax_cross_entropy_with_logits() output a array ---> reduce_mean()
 
     """
     cross_entropy = tf.nn.softmax_cross_entropy_with_logits(labels=label, logits=net_output)
-    segment_loss = cross_entropy
+    segment_loss = tf.reduce_mean(cross_entropy)
     # tf.summary.scalar("{}_loss".format(phase), segment_loss)
     return segment_loss
 
@@ -107,27 +98,25 @@ def accuracy(net_output, label, phase):
     return seg_acc
 
 
-def train(sess, train_op, loss_train, acc_train):
-    """ def train_op and run, then add it into the summary
+def evaluate(sess, loss_val, acc_val):
+    """
     :arg
         sess: the current tf.Session() Object
-        loss_train: A tensor, op to run
-        acc_train: A tensor, op to run
+        loss_val: A tensor, op to run
+        acc_val: A tensor, op to run
         writer_val:  A tf.summary.FileWriter Object, which using for add_summary
 
     :return:
-        loss_train: A tensor, op to run
-        acc_train: A tensor, op to run
-
+        loss_val: A tensor, op to run
+        acc_val: A tensor, op to run
 
     """
 
-    sess.run(train_op)
-    loss_train, acc_train = sess.run([loss_train, acc_train])
-    # merged = tf.summary.merge(loss_train, acc_train)
-    # summary_train = sess.run(merged)
-    # writer_train.add_summary(summary_train)
-    return loss_train, acc_train
+    loss_val, acc_val = sess.run([loss_val, acc_val])
+    # merged = tf.summary.merge(loss_val, acc_val)
+    # summary_val = sess.run(merged)
+    # writer_val.add_summary(summary_val)
+    return loss_val, acc_val
 
 
 def main(_):
@@ -135,20 +124,16 @@ def main(_):
 
     :return:
     """
-    # with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
     with tf.Session() as sess:
 
-        name_batch, image_batch, label_batch = batch_input(tfrecord_path_train)
+        name_val, image_val, label_val = batch_input(tfrecord_path_val, batch_size=16)
 
-        label_batch_ = tf.reshape(label_batch, (-1, 3))
+        label_val_ = tf.reshape(label_val, (-1, 3))
 
-        model_train = unet(image_batch, 'train')
+        model_val = unet(image_val, 'val')
 
-        loss_train = total_loss(model_train['output'], label_batch_, 'train')
-        acc_train = accuracy(model_train['output'], label_batch_, 'train')
-
-        optimizer = tf.train.AdamOptimizer(lr)
-        train_op = optimizer.minimize(loss_train)
+        loss_val = total_loss(model_val['output'], label_val_, 'val')
+        acc_val = accuracy(model_val['output'], label_val_, 'val')
 
         logging.info('variable initialization')
 
@@ -165,9 +150,9 @@ def main(_):
                 for epoch_i in range(epochs):
                     print ('Epoch {}'.format(epoch_i) + '/{}'.format(epochs))
                     for j in range(1, iter_each_epoch + 1):
-                        loss_train_, acc_train_ = train(sess, train_op, loss_train, acc_train)
+                        loss_val_, acc_val_ = evaluate(sess, loss_val, acc_val)
 
-                        pc_bar.show_process(j, iter_each_epoch, loss_train_, acc_train_)
+                        pc_bar.show_process(j, iter_each_epoch, loss_val_, acc_val_)
 
                 coord.request_stop()
         except tf.errors.OutOfRangeError:

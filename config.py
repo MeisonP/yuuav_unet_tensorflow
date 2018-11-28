@@ -60,8 +60,7 @@ class ShowProcess():
         self.i = 0
 
     def show_process(self, i, epoch_images,
-                     loss_train, acc_train):
-                     # val, acc_val):
+                     loss_, acc_):
         """ core method, show the process bar.
         Note:
             1. calculate how many >
@@ -83,7 +82,6 @@ class ShowProcess():
         else:
             self.i += 1
 
-
         num_arrow = int(self.i * self.max_arrow / self.max_steps)
         num_line = self.max_arrow - num_arrow
         percent = self.i * 100.0 / self.max_steps
@@ -91,7 +89,8 @@ class ShowProcess():
         process_bar_ = '\r'\
                        + '{0}/{1}'.format(i, epoch_images)\
                        + '[' + '>' * num_arrow + ' ' * num_line + ']' \
-                       + ' - ' + 'loss:{:.4f}'.format(loss_train) + ' - ' + 'acc:{:.4f}'.format(acc_train) + ';'
+                       + ' - loss:{:.2f}\t'.format(float(loss_)) \
+                       + ' - acc:{:.2f}'.format(float(acc_))
 
         sys.stdout.write(process_bar_)
         sys.stdout.flush()
@@ -101,9 +100,9 @@ class ShowProcess():
 
 def func_track(func):
     def track(*args, **kwargs):
-        name=func.__name__
+        name = func.__name__
         logging.info("func %s..."%name)
-        result=func(*args, **kwargs)
+        result = func(*args, **kwargs)
         logging.info("...func %s out"%name)
         return result
     return track
@@ -131,12 +130,12 @@ image_size = 256
 dataset_size = 132   # 2913
 
 BS = 8  # batch_size
-epochs = 10
+epochs = 10     # the epoch mean the count, start from 0, so  epochs=10 means 0-9
 iter_each_epoch = dataset_size/BS
 iter_max = iter_each_epoch*epochs
-queue_capacity = 24
+queue_capacity = 10
 
-num_queue_threads = 4
+num_queue_threads = 2
 
 tfrecord_path_train = "./data/train.tfrecords"
 tfrecord_path_val = "./data/val.tfrecords"
@@ -152,9 +151,9 @@ logging.info("\nparameters: batch_normalization={}\nclass_num={}\n"
 
 if __name__ == '__main__':
     pc_bar_ = ShowProcess(10, '')
-
+    ar = [1,2,3,4,5]
     for epoch_i_ in range(2):
         print ('Epoch {}'.format(epoch_i_) + '/{}'.format(epochs))
         for i in range(1,  10+1):
-            pc_bar_.show_process(i, epoch_i_, 1.0, 1.0)
+            pc_bar_.show_process(i, 10, ar[1], 1.0)
             time.sleep(1)

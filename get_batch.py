@@ -24,8 +24,11 @@ def batch_input(record_file, batch_size=BS):
     Note:
         capacity:An integer. The maximum number of elements in the queue.
         min_after_dequeue: Minimum number elements in the queue after a
-        dequeue, used to ensure a level of mixing of elements. and
-        batch_size + min_after_dequeue = capacity
+        dequeue, used to ensure a level of mixing of elements, and
+        batch_size + min_after_dequeue = capacity.
+
+        the "num_epochs" of string_input_producer is the limited epochs, means the label of epoch, not the count.
+        eg: epochs=10. then  the limited should be 9 (num_epochs from 0 to 9), so num_epochs=10-1
 
     :param
         record_filelist: A string list, consist of the tfrecords filename list.
@@ -39,7 +42,7 @@ def batch_input(record_file, batch_size=BS):
         'image': tf.FixedLenFeature([], tf.string),
         'mask': tf.FixedLenFeature([], tf.string)}
 
-    filename_queue = tf.train.string_input_producer([record_file], num_epochs=epochs)
+    filename_queue = tf.train.string_input_producer([record_file], num_epochs=epochs-1)
 
     reader = tf.TFRecordReader()
     _, serialized_example = reader.read(filename_queue)
