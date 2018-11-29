@@ -16,7 +16,8 @@ Note:
 
 
 import tensorflow as tf
-from config import image_size, BS, queue_capacity, epochs
+import numpy as np
+from config import image_size, BS, queue_capacity, epochs, num_queue_threads, iter_each_epoch
 
 
 def batch_input(record_file, batch_size=BS):
@@ -29,7 +30,8 @@ def batch_input(record_file, batch_size=BS):
 
         the "num_epochs" of string_input_producer is the limited epochs, means the label of epoch, not the count.
         using for queue control, when achieve the limited then report a tf.errors.OutOfRangeError.
-        eg: epochs=10. then who to set num_epochs?
+        eg: epochs=10. then who to set num_epochs?  it must be >=  epochs,
+        otherwise it will stop before your max_iters. set to None should be fine.
 
     :param
         record_filelist: A string list, consist of the tfrecords filename list.
@@ -43,7 +45,7 @@ def batch_input(record_file, batch_size=BS):
         'image': tf.FixedLenFeature([], tf.string),
         'mask': tf.FixedLenFeature([], tf.string)}
 
-    filename_queue = tf.train.string_input_producer([record_file], num_epochs=epochs-1)
+    filename_queue = tf.train.string_input_producer([record_file], num_epochs=epochs)
 
     reader = tf.TFRecordReader()
     _, serialized_example = reader.read(filename_queue)
@@ -54,22 +56,24 @@ def batch_input(record_file, batch_size=BS):
 
     img = tf.decode_raw(features['image'], tf.uint8)
     img = tf.reshape(img, [image_size, image_size, 3])
-    img = tf.cast(img, tf.float32) * (1. / 255) - 0.5
+    img = (tf.cast(img, tf.float32) - [104.0, 117.0, 123.0]) * (1. / 255)   # ?
+    # img = tf.cast(img, tf.float32) * (1. / 255) - 0.5
 
     mask = tf.decode_raw(features['mask'], tf.uint8)
-    mask = tf.cast(mask, tf.float32) * (1. / 255) - 0.5
     mask = tf.reshape(mask, [image_size, image_size, 3])
+    mask = (tf.cast(mask, tf.float32) - [104.0, 117.0, 123.0]) * (1. / 255)
+    # mask = tf.cast(mask, tf.float32) * (1. / 255) - 0.5
 
     name_batch, img_batch, label_batch = tf.train.shuffle_batch([nm, img, mask],
                                                                 batch_size=batch_size,
                                                                 capacity=queue_capacity,
-                                                                min_after_dequeue=queue_capacity-batch_size)
+                                                                min_after_dequeue=0, num_threads=num_queue_threads)
     return name_batch, img_batch, label_batch
 
 
 if __name__ == '__main__':
     print '***************** module testing ******************'
-    image_size = 500
+    image_size = 256
 
     with tf.Session() as sess:
         names, images, labels = batch_input("./data/train.tfrecords", 8)
@@ -81,10 +85,13 @@ if __name__ == '__main__':
         threads = tf.train.start_queue_runners(coord=coord)
         try:
             while not coord.should_stop():
-                for i in range(1):
-                    names_, images_, labels_ = sess.run([names, images, labels])
-                    print 'filename_in_batch:', names_, "\noutput_batch_shape:", images_.shape
-                print "\nfinished,\nuser request coord stop ! "
+                for i in range(1, epochs+1):
+                    for j in range(1, iter_each_epoch+1):
+                        names_, images_, labels_ = sess.run([names, images, labels])
+                        print '\n{0}/{1}epohos; {2}/{3}:\n'.format(i, epochs, j, iter_each_epoch), 'filename_in_batch:',\
+                            names_, "\noutput_batch_shape:", images_.shape
+
+                print "\nfinished,\nachieve the user's iter_max, request coord stop ! "
                 coord.request_stop()
         except tf.errors.OutOfRangeError:
             print 'done! limit epochs achieved.'

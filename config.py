@@ -87,7 +87,7 @@ class ShowProcess():
         percent = self.i * 100.0 / self.max_steps
 
         process_bar_ = '\r'\
-                       + '{0}/{1}'.format(i, epoch_images)\
+                       + '{0}/{1} '.format(i, epoch_images)\
                        + '[' + '>' * num_arrow + ' ' * num_line + ']' \
                        + ' - loss:{:.2f}\t'.format(float(loss_)) \
                        + ' - acc:{:.2f}'.format(float(acc_))
@@ -122,7 +122,7 @@ summary_path = path_checker("./tensorboard/")
 
 batch_normalization = 1
 class_num = 20+1
-classes = [0, 1]
+
 keep_prob = 0.8
 lr = 0.001
 
@@ -130,12 +130,14 @@ image_size = 256
 dataset_size = 132   # 2913
 
 BS = 8  # batch_size
-epochs = 10     # the epoch mean the count, start from 0, so  epochs=10 means 0-9
+epochs = 1000    # the epoch mean the count, start from 0, so  epochs=10 means 0-9
 iter_each_epoch = dataset_size/BS
 iter_max = iter_each_epoch*epochs
-queue_capacity = 10
+queue_capacity = 10000
 
-num_queue_threads = 2
+num_queue_threads = 4
+
+filters = 32    # the filter number of the first conv layer
 
 tfrecord_path_train = "./data/train.tfrecords"
 tfrecord_path_val = "./data/val.tfrecords"
@@ -151,7 +153,7 @@ logging.info("\nparameters: batch_normalization={}\nclass_num={}\n"
 
 if __name__ == '__main__':
     pc_bar_ = ShowProcess(10, '')
-    ar = [1,2,3,4,5]
+    ar = [1, 2, 3, 4, 5]
     for epoch_i_ in range(2):
         print ('Epoch {}'.format(epoch_i_) + '/{}'.format(epochs))
         for i in range(1,  10+1):

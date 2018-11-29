@@ -26,7 +26,9 @@ How to train (step):
                 --label
     2. command line:
         $ python dataset_gen.py -p "path to the tfrecords file"
-    3. command line:
+    3. modify the config.py parameters:
+       lr, path, dataset_size, image_size, batch_size, class_num, filters ....
+    4. then run command line:
         $ python train_main.py -m "final model save path"
 
 
@@ -122,8 +124,7 @@ def train(sess, train_op, loss_train, acc_train):
 
     """
 
-    sess.run(train_op)
-    loss_train, acc_train = sess.run([loss_train, acc_train])
+    loss_train, acc_train = sess.run([loss_train, acc_train, train_op])
     # merged = tf.summary.merge(loss_train, acc_train)
     # summary_train = sess.run(merged)
     # writer_train.add_summary(summary_train)

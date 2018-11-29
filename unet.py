@@ -118,62 +118,62 @@ def unet(input_, op_name):
 
         # #############conv
         # block 1
-        net['conv1_1'] = conv_relu(input_=inputs, ksize=3, filter_num=32, name="conv1_1")
-        net['conv1_2'] = conv_relu(net['conv1_1'], 3, 32, "conv1_2")
+        net['conv1_1'] = conv_relu(input_=inputs, ksize=3, filter_num=filters, name="conv1_1")
+        net['conv1_2'] = conv_relu(net['conv1_1'], 3, filters, "conv1_2")
         net['pool1'] = pool(net['conv1_2'], ksize=2, type_=max, name='pool1')
 
         # block 2
-        net['conv2_1'] = conv_relu(net['pool1'], 3, 64, "conv2_1")
-        net['conv2_2'] = conv_relu(net['conv2_1'], 3, 64, "conv2_2")
+        net['conv2_1'] = conv_relu(net['pool1'], 3, filters * 2, "conv2_1")
+        net['conv2_2'] = conv_relu(net['conv2_1'], 3, filters * 2, "conv2_2")
         net['pool2]'] = pool(net['conv2_2'], 2, max, 'pool2')
 
         # block 3
-        net['conv3_1'] = conv_relu(net['pool2]'], 3, 128, "conv3_1")
-        net['conv3_2'] = conv_relu(net['conv3_1'], 3, 128, "conv3_2")
+        net['conv3_1'] = conv_relu(net['pool2]'], 3, filters * 4, "conv3_1")
+        net['conv3_2'] = conv_relu(net['conv3_1'], 3, filters * 4, "conv3_2")
         net['pool3'] = pool(net['conv3_2'], 2, max, 'pool3')
         net['dropout3'] = dropout(net['pool3'], keep_prob, name='dropout3')
 
         # block 4
-        net['conv4_1'] = conv_relu(net['pool3'], 3, 256, "conv4_1")
-        net['conv4_2'] = conv_relu(net['conv4_1'], 3, 256, "conv4_2")
+        net['conv4_1'] = conv_relu(net['pool3'], 3, filters * 8, "conv4_1")
+        net['conv4_2'] = conv_relu(net['conv4_1'], 3, filters * 8, "conv4_2")
         net['pool4'] = pool(net['conv4_2'], 2, max, 'pool4')
         net['dropout4'] = dropout(net['pool4'], keep_prob, name='dropout4')
 
         # block 5
-        net['conv5_1'] = conv_relu(net['dropout4'], 3, 512, "conv5_1")
-        net['conv5_2'] = conv_relu(net['conv5_1'], 3, 512, "conv5_2")
+        net['conv5_1'] = conv_relu(net['dropout4'], 3, filters * 16, "conv5_1")
+        net['conv5_2'] = conv_relu(net['conv5_1'], 3, filters * 16, "conv5_2")
         net['dropout5'] = dropout(net['conv5_2'], keep_prob, name='dropout5')
 
         # #############deconv
         # block 6
-        net['upsample6'] = deconv(net['dropout5'], 512, 2, "upsample6")
+        net['upsample6'] = deconv(net['dropout5'], filters * 16, 2, "upsample6")
         net['concat6'] = tf.concat([net['upsample6'], net['conv4_2']], axis=3, name='concat6')
 
-        net['conv6_1'] = conv_relu(net['concat6'], 3, 256, "conv6_1")
-        net['conv6_2'] = conv_relu(net['conv6_1'], 3, 256, "conv6_2")
+        net['conv6_1'] = conv_relu(net['concat6'], 3, filters * 8, "conv6_1")
+        net['conv6_2'] = conv_relu(net['conv6_1'], 3, filters * 8, "conv6_2")
         net['dropout6'] = dropout(net['conv6_2'], keep_prob, name='dropout6')
 
         # block 7
-        net['upsample7'] = deconv(net['dropout6'], 256, 2, "upsample7")
+        net['upsample7'] = deconv(net['dropout6'], filters * 8, 2, "upsample7")
         net['concat7'] = tf.concat([net['upsample7'], net['conv3_2']], axis=3, name='concat7')
 
-        net['conv7_1'] = conv_relu(net['concat7'], 3, 128, "conv7_1")
-        net['conv7_2'] = conv_relu(net['conv7_1'], 3, 128, "conv7_2")
+        net['conv7_1'] = conv_relu(net['concat7'], 3, filters * 4, "conv7_1")
+        net['conv7_2'] = conv_relu(net['conv7_1'], 3, filters * 4, "conv7_2")
         net['dropout7'] = dropout(net['conv7_2'], keep_prob, name='dropout7')
 
         # block 8
-        net['upsample8'] = deconv(net['dropout7'], 128, 2, "upsample8")
+        net['upsample8'] = deconv(net['dropout7'], filters * 4, 2, "upsample8")
         net['concat8'] = tf.concat([net['upsample8'], net['conv2_2']], axis=3, name='concat8')
 
-        net['conv8_1'] = conv_relu(net['concat8'], 3, 64, "conv8_1")
-        net['conv8_2'] = conv_relu(net['conv8_1'], 3, 64, "conv8_2")
+        net['conv8_1'] = conv_relu(net['concat8'], 3, filters * 2, "conv8_1")
+        net['conv8_2'] = conv_relu(net['conv8_1'], 3, filters * 2, "conv8_2")
 
         # block 9
-        net['upsample9'] = deconv(net['conv8_2'], 64, 2, "upsample9")
+        net['upsample9'] = deconv(net['conv8_2'], filters * 2, 2, "upsample9")
         net['concat9'] = tf.concat([net['upsample9'], net['conv1_2']], axis=3, name='concat9')
 
-        net['conv9_1'] = conv_relu(net['concat9'], 3, 32, "conv9_1")
-        net['conv9_2'] = conv_relu(net['conv9_1'], 3, 32, "conv9_2")
+        net['conv9_1'] = conv_relu(net['concat9'], 3, filters, "conv9_1")
+        net['conv9_2'] = conv_relu(net['conv9_1'], 3, filters, "conv9_2")
 
         # block 10
         # the filter 3 is mean the image channel num
