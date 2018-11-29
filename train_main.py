@@ -187,4 +187,4 @@ if __name__ == "__main__":
     FLAGS, _ = parser.parse_known_args()
 
     tf.app.run()
-    logging.info("done! ")
+    logging.info("train completed!")
