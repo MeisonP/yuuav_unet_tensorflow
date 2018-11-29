@@ -163,7 +163,7 @@ def main(_):
                 logging.info('sess run for image pass through the network, please waite...')
                 pc_bar = ShowProcess(iter_each_epoch, '')
 
-                for epoch_i in range(epochs):
+                for epoch_i in range(1, epochs+1):
                     print ('Epoch {}'.format(epoch_i) + '/{}'.format(epochs))
                     for j in range(1, iter_each_epoch + 1):
                         loss_train_, acc_train_ = train(sess, train_op, loss_train, acc_train)
