@@ -124,7 +124,7 @@ def train(sess, train_op, loss_train, acc_train):
 
     """
 
-    loss_train, acc_train = sess.run([loss_train, acc_train, train_op])
+    loss_train, acc_train, _ = sess.run([loss_train, acc_train, train_op])
     # merged = tf.summary.merge(loss_train, acc_train)
     # summary_train = sess.run(merged)
     # writer_train.add_summary(summary_train)
