@@ -84,7 +84,7 @@ def total_loss(net_output, label, phase):
     """
     cross_entropy = tf.nn.softmax_cross_entropy_with_logits(labels=label, logits=net_output)
     segment_loss = tf.reduce_mean(cross_entropy)
-    # tf.summary.scalar("{}_loss".format(phase), segment_loss)
+    # loss_summary = tf.summary.scalar("{}_acc".format(phase), segment_loss)
     return segment_loss
 
 
@@ -105,30 +105,8 @@ def accuracy(net_output, label, phase):
     correct_predictions = tf.equal(predicted_annots, labels)
 
     seg_acc = tf.reduce_mean(tf.cast(correct_predictions, tf.float32))
-    # tf.summary.scalar("{}_acc".format(phase), seg_acc)
+    # acc_summary = tf.summary.scalar("{}_acc".format(phase), seg_acc)
     return seg_acc
-
-
-def train(sess, train_op, loss_train, acc_train):
-    """ def train_op and run, then add it into the summary
-    :arg
-        sess: the current tf.Session() Object
-        loss_train: A tensor, op to run
-        acc_train: A tensor, op to run
-        writer_val:  A tf.summary.FileWriter Object, which using for add_summary
-
-    :return:
-        loss_train: A tensor, op to run
-        acc_train: A tensor, op to run
-
-
-    """
-
-    loss_train, acc_train, _ = sess.run([loss_train, acc_train, train_op])
-    # merged = tf.summary.merge(loss_train, acc_train)
-    # summary_train = sess.run(merged)
-    # writer_train.add_summary(summary_train)
-    return loss_train, acc_train
 
 
 def main(_):
@@ -146,9 +124,16 @@ def main(_):
         model_train = unet(image_batch, 'train')
 
         loss_train = total_loss(model_train['output'], label_batch_, 'train')
+        loss_summary = tf.summary.scalar("train_loss", loss_train)
         acc_train = accuracy(model_train['output'], label_batch_, 'train')
+        acc_summary = tf.summary.scalar("train_acc", acc_train)
 
-        optimizer = tf.train.AdamOptimizer(lr)
+        writer_train = tf.summary.FileWriter(path_checker(summary_path + "train"))
+        saver = tf.train.Saver()
+
+        # optimizer = tf.train.AdamOptimizer(lr)
+        optimizer = tf.train.GradientDescentOptimizer(lr)
+
         train_op = optimizer.minimize(loss_train)
 
         logging.info('variable initialization')
@@ -166,7 +151,12 @@ def main(_):
                 for epoch_i in range(1, epochs+1):
                     print ('Epoch {}'.format(epoch_i) + '/{}'.format(epochs))
                     for j in range(1, iter_each_epoch + 1):
-                        loss_train_, acc_train_ = train(sess, train_op, loss_train, acc_train)
+
+                        loss_train_, acc_train_, _ = sess.run([loss_train, acc_train, train_op])
+
+                        merged = tf.summary.merge([loss_summary, acc_summary])
+                        summary_train = sess.run(merged)
+                        writer_train.add_summary(summary_train, global_step=epoch_i * j)
 
                         pc_bar.show_process(j, iter_each_epoch, loss_train_, acc_train_)
 
@@ -175,7 +165,10 @@ def main(_):
             print '\ndone! limit epochs achieved.'
         finally:
             coord.request_stop()
-            coord.join(threads)
+            coord.join(threads)     # wait until coord finished , and then go to next step.
+
+        writer_train.close()
+        saver.save(sess, FLAGS.model_save_path)
 
 
 if __name__ == "__main__":

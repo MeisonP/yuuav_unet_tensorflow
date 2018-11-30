@@ -130,10 +130,10 @@ image_size = 256
 dataset_size = 132   # 2913
 
 BS = 8  # batch_size
-epochs = 1000    # the epoch mean the count, start from 0, so  epochs=10 means 0-9
+epochs = 10    # the epoch mean the count, start from 0, so  epochs=10 means 0-9
 iter_each_epoch = dataset_size/BS
 iter_max = iter_each_epoch*epochs
-queue_capacity = 10000
+queue_capacity = 1000
 
 num_queue_threads = 4
 
@@ -145,7 +145,7 @@ tfrecord_path_val = "./data/val.tfrecords"
 
 logging.info("\nparameters: batch_normalization={}\nclass_num={}\n"
              "keep_prob={}\nsummary_path={}\nlearning_rate={}\nbatch_size={}\nimage_size={}\ndataset_size={}\n"
-             "epochs={}\niter_each_epoch{}\niter_max={}\n".
+             "epochs={}\niter_each_epoch={}\niter_max={}\n".
              format(bool(batch_normalization), class_num,
                     keep_prob, summary_path, lr, BS, image_size, dataset_size,
                     epochs, iter_each_epoch, iter_max))
