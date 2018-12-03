@@ -61,7 +61,7 @@ def conv_relu(input_, ksize, filter_num, name, activation=True):
                                       filter_shape,
                                       tf.float32)
 
-        output = tf.nn.conv2d(input_, filter_,
+            output = tf.nn.conv2d(input_, filter_,
                                   strides=[1, 1, 1, 1],
                                   padding="SAME")
     logging.info("layer {0}, filter{1}, output{2}".format(name, filter_shape, output.shape))
@@ -139,6 +139,7 @@ def unet(input_, op_name):
         net['pool4'] = pool(net['conv4_2'], 2, max, 'pool4')
         net['dropout4'] = dropout(net['pool4'], keep_prob, name='dropout4')
 
+
         # block 5
         net['conv5_1'] = conv_relu(net['dropout4'], 3, filters * 16, "conv5_1")
         net['conv5_2'] = conv_relu(net['conv5_1'], 3, filters * 16, "conv5_2")
@@ -177,6 +178,8 @@ def unet(input_, op_name):
 
         # block 10
         # the filter 3 is mean the image channel num
+
+        # net['conv10'] = conv_relu(net['conv9_2'], 1, class_num, "conv10", False)
         net['conv10'] = conv_relu(net['conv9_2'], 1, 3, "conv10", False)
 
         # net['output'] = tf.reshape(net['conv10'], (-1, class_num))

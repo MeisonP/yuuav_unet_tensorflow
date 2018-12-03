@@ -127,17 +127,17 @@ keep_prob = 0.8
 lr = 0.001
 
 image_size = 256
-dataset_size = 132   # 2913
+dataset_size = 32   # 2913
 
-BS = 8  # batch_size
-epochs = 10    # the epoch mean the count, start from 0, so  epochs=10 means 0-9
+BS = 2  # batch_size
+epochs = 2    # the epoch mean the count, start from 0, so  epochs=10 means 0-9
 iter_each_epoch = dataset_size/BS
 iter_max = iter_each_epoch*epochs
 queue_capacity = 1000
 
 num_queue_threads = 4
 
-filters = 32    # the filter number of the first conv layer
+filters = 2    # the filter number of the first conv layer
 
 tfrecord_path_train = "./data/train.tfrecords"
 tfrecord_path_val = "./data/val.tfrecords"
