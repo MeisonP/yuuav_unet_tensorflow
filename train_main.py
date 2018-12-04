@@ -82,7 +82,7 @@ def total_loss(net_output, label, phase):
 
 
     """
-    cross_entropy = tf.nn.softmax_cross_entropy_with_logits_v2(labels=label, logits=net_output)
+    cross_entropy = tf.nn.softmax_cross_entropy_with_logits(labels=label, logits=net_output)
     segment_loss = tf.reduce_mean(cross_entropy)
     # loss_summary = tf.summary.scalar("{}_acc".format(phase), segment_loss)
     return segment_loss
@@ -118,7 +118,7 @@ def debug_main():
 
         name_batch, image_batch, label_batch = batch_input(tfrecord_path_val)
 
-        label_batch_ = tf.reshape(label_batch, (-1, 3))
+        label_batch_ = tf.reshape(label_batch, (-1, num_classes))
 
         model_train = unet(image_batch, 'train')
 
@@ -178,7 +178,7 @@ def main(_):
 
         name_batch, image_batch, label_batch = batch_input(tfrecord_path_train)
 
-        label_batch_ = tf.reshape(label_batch, (-1, num_classes))
+        label_batch_ = tf.reshape(label_batch, (image_size*image_size, num_classes))
 
         model_train = unet(image_batch, 'train')
 

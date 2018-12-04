@@ -45,7 +45,7 @@ def rgb_label_maker(rgb_label_image, class_num):
         VOC rgb segment label, each color related to particular class,
         transf_value: is used for rgb value to class id which mapping to class name
         label_1d: is a (h, w) matrix , which's value is the class id. the label_1d then
-        transfor to label (h, w, num_)
+        transform to label (h, w, num_)
 
 
 
