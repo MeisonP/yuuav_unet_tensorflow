@@ -179,11 +179,11 @@ def unet(input_, op_name):
         # block 10
         # the filter 3 is mean the image channel num
 
-        # net['conv10'] = conv_relu(net['conv9_2'], 1, class_num, "conv10", False)
-        net['conv10'] = conv_relu(net['conv9_2'], 1, 3, "conv10", False)
+        net['conv10'] = conv_relu(net['conv9_2'], 1, num_classes, "conv10", False)
+        # net['conv10'] = conv_relu(net['conv9_2'], 1, 3, "conv10", False)
 
-        # net['output'] = tf.reshape(net['conv10'], (-1, class_num))
-        net['output'] = tf.reshape(net['conv10'], (-1, 3))  # the 3 is the rgb channel
+        net['output'] = tf.reshape(net['conv10'], (-1, num_classes))
+        # net['output'] = tf.reshape(net['conv10'], (-1, 3))  # the 3 is the rgb channel
 
         logging.info("the model output shape: {}".format(net["output"].shape))
     return net

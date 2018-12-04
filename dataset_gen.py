@@ -28,6 +28,7 @@ Note:
 
 
 import tensorflow as tf
+import numpy as np
 import os
 import cv2
 import sys
@@ -35,12 +36,91 @@ import argparse
 import time
 
 
-def create_tfrecord(record_path_, dataset_path_, process_bar_, image_size):
+def rgb_label_maker(rgb_label_image, class_num):
+    """only for VOC dataset segment, (need change the num_classes, COLORMAP for other dataset)
+    transfer the RGB label image(h, w, 3) to input label matrix (h, w, num_classes),
+    mapping the rgb value to class distribution
 
+    Note:
+        VOC rgb segment label, each color related to particular class,
+        transf_value: is used for rgb value to class id which mapping to class name
+        label_1d: is a (h, w) matrix , which's value is the class id. the label_1d then
+        transfor to label (h, w, num_)
+
+
+
+    :arg
+        rgb_label_image: a rgb image with shape (h, w, 3), dtype is uint8
+
+    :return
+        a np array (only has value 0 and 1) with shape (h, w, num_classes), dtype is int64
+
+        but you can change to uint8 by using astype(np.uint8)
+        the third dimension  is the class distribution(which index =1, means which class)
+        eg:  [0 0 0 1 0 0 0 ...]  means 3 class of class and then mapping to the class name.
+    """
+
+    VOC_COLORMAP = [[0, 0, 0], [128, 0, 0], [0, 128, 0], [128, 128, 0],
+                    [0, 0, 128], [128, 0, 128], [0, 128, 128], [128, 128, 128],
+                    [64, 0, 0], [192, 0, 0], [64, 128, 0], [192, 128, 0],
+                    [64, 0, 128], [192, 0, 128], [64, 128, 128], [192, 128, 128],
+                    [0, 64, 0], [128, 64, 0], [0, 192, 0], [128, 192, 0],
+                    [0, 64, 128]]
+
+    VOC_CLASSES = ['background', 'aeroplane', 'bicycle', 'bird', 'boat',
+                   'bottle', 'bus', 'car', 'cat', 'chair', 'cow',
+                   'diningtable', 'dog', 'horse', 'motorbike', 'person',
+                   'potted plant', 'sheep', 'sofa', 'train', 'tv/monitor']
+
+    transf_value = np.zeros((256**3), dtype=np.int64)
+
+    for i, colormap in enumerate(VOC_COLORMAP):
+        transf_value[(colormap[0]*256*256 + colormap[1]*256 + colormap[0])] = i
+
+    idx = (rgb_label_image[:, :, 0]*256*256 + rgb_label_image[:, :, 1]*256 + rgb_label_image[:, :, 2])
+
+    label_2d = transf_value[idx]
+
+    h, w, _ = rgb_label_image.shape
+    label = np.zeros(shape=(h, w, class_num), dtype=np.int8)
+
+    for i in range(h):
+        for j in range(w):
+            k = label_2d[i, j]
+            label[i, j, k] = 1
+
+    return label
+
+
+def gray_label_maker(gray_image, class_num):
+    """ the class name and id is changeable
+
+    :param
+        gray_image:  2d image /a matrix with shape (h, w); this equal to label_2d in rgb_label_maker func
+
+    :return:
+        a np array (only has value 0 and 1) with shape (h, w, num_classes), dtype is int64
+    """
+
+    h, w, _ = gray_image.shape
+    label = np.zeros(shape=(h, w, class_num), dtype=np.int8)
+
+    for i in range(h):
+        for j in range(w):
+            k = gray_image[i, j]
+            label[i, j, k] = 1
+
+    return label
+
+
+def create_tfrecord(record_path_, dataset_path_, process_bar_, image_size, class_num):
     """method, to create a TFrecord file, a byte data files,
     which contains the tf.train.Example() protocol memory block (protocol buffer).
 
     Note:
+        ! for diff label maker,
+        pls change : mask = rgb_label_maker(mask,class)  or mask = gray_label_maker(mask, class)
+
         *resize. make sure the shape of image are same to the tensor shape fed into the network
         dataset to tfrecord. the main question is **hwo to define the example feature**
         inorder process bar up to 100%, the counter must start from 1
@@ -86,6 +166,7 @@ def create_tfrecord(record_path_, dataset_path_, process_bar_, image_size):
         label_path = dataset_path_ + "labels/" + name + ".png"
         mask = cv2.imread(label_path)
         mask = cv2.resize(mask, (image_size, image_size), interpolation=cv2.INTER_LINEAR)
+        mask = rgb_label_maker(mask, class_num)    # output (h, w, num_classes)
         mask_raw = mask.tobytes()
 
         feature_dict = {
@@ -171,7 +252,7 @@ def main(_):
     max_steps = dataset_size
 
     process_bar_ = ShowProcess(max_steps, '{}: TFRecords Done!'.format(FLAGS.record_path))
-    create_tfrecord(FLAGS.record_path, FLAGS.dataset_path, process_bar_, FLAGS.image_size)
+    create_tfrecord(FLAGS.record_path, FLAGS.dataset_path, process_bar_, FLAGS.image_size, FLAGS.num_classes)
 
 
 if __name__ == "__main__":
@@ -179,9 +260,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Eval Unet on given tfrecords.')
 
     parser.add_argument('--image_size', help='inter, size of reshape', default=256)
+    parser.add_argument('--num_classes', '-c', help='inter, the number of classes',
+                        required=True, default=21, type=np.int8)
+
     parser.add_argument('--batch_size', help='inter, size of batch', default=8)
 
-    parser.add_argument('--dataset_path', '-d', help='the dir of the data folder', required=True, default="./data/train/")
+    parser.add_argument('--dataset_path', '-d', help='the dir of the data folder',
+                        required=True, default="./data/train/")
     parser.add_argument('--record_path', '-r', help='path of the created tfrecords file',
                         required=True, default="./data/train.tfrecords")    # "./data/val.tfrecords"
 

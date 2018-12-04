@@ -178,7 +178,7 @@ def main(_):
 
         name_batch, image_batch, label_batch = batch_input(tfrecord_path_train)
 
-        label_batch_ = tf.reshape(label_batch, (-1, 3))
+        label_batch_ = tf.reshape(label_batch, (-1, num_classes))
 
         model_train = unet(image_batch, 'train')
 
