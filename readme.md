@@ -6,19 +6,19 @@ the guild for construct a python project: file structure
 * the config file and flag(commad line arg) just need one of two
 
 ### file structure (5 module)
-* dataset_gen.py 
+#### 1.  dataset_gen.py
  >(generator a dataset which prepared for train form raw data)
 
-* config.py
-* unet.py
+#### 2.  config.py
+#### 3.  unet.py
  >(the net is replaceable)
-*data_preprocess.py
+#### 4. data_preprocess.py
  >the preprocess is replaceable, alternative. if the process is much complex, then should be as a individual module)
-* get_batch.py
+#### 5.  get_batch.py
  >(creating batch queue from the dataset, then feed the network)
-* train_main.py
+#### 6.  train_main.py
  >(train interface, input batch queue and output a h5 model weight file)
-* deploy.py/predict.py
+#### 7.  deploy.py/predict.py
  >(after the training)
 
 
