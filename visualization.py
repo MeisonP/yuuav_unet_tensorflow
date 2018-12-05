@@ -1,5 +1,9 @@
 # coding: utf-8
 """ module prepared for deploy.py ;  visualizing the network output,
+
+2018/12/04
+python ==2.7.15
+
 Note:
     the net['output'] is a tensor with shape (h*w, num_classes)
 
@@ -22,12 +26,12 @@ def netoutput_2_labelmat(net_output, h, w, class_num):
         a 2D array, whose value donates the label ID
     """
 
-    label_3d = net_output.reshape((h, w, class_num), dtype=np.int8)
-    label_2d = np.zeros((h, w), dtype=np.int)
+    label_3d = net_output.reshape((h, w, class_num))
+    label_2d = np.zeros((h, w), dtype=np.uint8)
 
     for i in range(h):
         for j in range(w):
-            label_2d[i, j] = np.where(label_3d[i, j, :] == 1)
+            label_2d[i, j] = np.where(label_3d[i, j, :] == 1)[0][0]
 
     return label_2d
 

@@ -2,7 +2,7 @@
 """module, service for network as a batch input. creating a queue-based input pipeline.
 define the core method batch_input, and also can do module testing
 
-2018/11/21
+2018/12/04
 tensorflow ==1.11
 python ==2.7.15
 
@@ -59,7 +59,7 @@ def batch_input(record_file, batch_size=BS, class_num=num_classes):
     img = (tf.cast(img, tf.float32) - [104.0, 117.0, 123.0]) * (1. / 255)   # ?
     # img = tf.cast(img, tf.float32) * (1. / 255) - 0.5
 
-    mask = tf.decode_raw(features['mask'], tf.int8)     # the label is int8 type
+    mask = tf.decode_raw(features['mask'], tf.uint8)
     mask = tf.reshape(mask, [image_size, image_size, class_num])
     # mask = (tf.cast(mask, tf.float32) - [104.0, 117.0, 123.0]) * (1. / 255)
     # mask = tf.cast(mask, tf.float32) * (1. / 255) - 0.5

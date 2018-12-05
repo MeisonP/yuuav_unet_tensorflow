@@ -4,7 +4,7 @@ for the tensorflow, the raw dataset format is: images files (src is images, labe
 #of course there are other wary to feed data into net, not only this way:generate tfrecord;
 # such feet the image batch directly
 
-2018/11/21
+2018/12/04
 tensorflow ==1.11
 python ==2.7.15
 
@@ -72,7 +72,7 @@ def rgb_label_maker(rgb_label_image, class_num):
                    'diningtable', 'dog', 'horse', 'motorbike', 'person',
                    'potted plant', 'sheep', 'sofa', 'train', 'tv/monitor']
 
-    transf_value = np.zeros((256**3), dtype=np.int64)
+    transf_value = np.zeros((256**3), dtype=np.uint8)
 
     for i, colormap in enumerate(VOC_COLORMAP):
         transf_value[(colormap[0]*256*256 + colormap[1]*256 + colormap[0])] = i
@@ -82,7 +82,7 @@ def rgb_label_maker(rgb_label_image, class_num):
     label_2d = transf_value[idx]
 
     h, w, _ = rgb_label_image.shape
-    label = np.zeros(shape=(h, w, class_num), dtype=np.int8)
+    label = np.zeros(shape=(h, w, class_num), dtype=np.uint8)
 
     for i in range(h):
         for j in range(w):
@@ -103,7 +103,7 @@ def gray_label_maker(gray_image, class_num):
     """
 
     h, w, _ = gray_image.shape
-    label = np.zeros(shape=(h, w, class_num), dtype=np.int8)
+    label = np.zeros(shape=(h, w, class_num), dtype=np.uint8)
 
     for i in range(h):
         for j in range(w):
@@ -261,7 +261,7 @@ if __name__ == "__main__":
 
     parser.add_argument('--image_size', help='inter, size of reshape', default=256)
     parser.add_argument('--num_classes', '-c', help='inter, the number of classes',
-                        required=True, default=21, type=np.int8)
+                        required=True, default=21, type=np.uint8)
 
     parser.add_argument('--batch_size', help='inter, size of batch', default=8)
 

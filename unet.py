@@ -1,7 +1,9 @@
 # coding:utf-8
 """module, define a unet network (supplying some-layer method and net method)
 
-2018/11/19
+2018/12/04
+tensorflow ==1.11
+python ==2.7.15
 
 Note:
     #  factor: Integer, upsampling factor
@@ -186,6 +188,7 @@ def unet(input_, op_name):
         # net['output'] = tf.reshape(net['conv10'], (-1, 3))  # the 3 is the rgb channel
 
         logging.info("the model output shape: {}".format(net["output"].shape))
+
     return net
 
 

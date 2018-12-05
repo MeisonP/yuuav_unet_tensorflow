@@ -2,9 +2,9 @@
 """main interface using for train a unet model (using tensorflow and opencv).
 the purpose of this project is to do the satellite-image segmentation. yuuav building
 
-#2018/11/19
-#python==2.7.15
-#tensorflow==1.11
+2018/12/04
+tensorflow ==1.11 (cpu)  and tensorflow-gpu (1.4.1)
+python ==2.7.15
 #opencv==3.4.2
 
 
@@ -31,6 +31,11 @@ How to train (step):
     4. then run command line:
         $ python train_main.py -m "final model save path"
 
+        after train finished ,you will get 3 file for deploy
+        --.meta :store the graph
+        --.data :store the weight value
+        --.index :store the index of weight value
+
 
 
 
@@ -38,6 +43,7 @@ Note: the main step as follow
     --batch input
     --loss and acc
     --train_op
+    --checkpoint restore if needed
     --init
     --sess.run
 
@@ -122,6 +128,8 @@ def debug_main():
 
         model_train = unet(image_batch, 'train')
 
+        # predict = model_train['output']
+
         loss_train = total_loss(model_train['output'], label_batch_, 'train')
         loss_summary = tf.summary.scalar("train_loss", loss_train)
         acc_train = accuracy(model_train['output'], label_batch_, 'train')
@@ -170,6 +178,8 @@ def debug_main():
 
 def main(_):
     """ main func for train
+    Note:
+        the checkpoint only save 20%, 40%, 60%, 80%, 100% step
 
     :return:
     """
@@ -184,11 +194,14 @@ def main(_):
 
         loss_train = total_loss(model_train['output'], label_batch_, 'train')
         loss_summary = tf.summary.scalar("train_loss", loss_train)
+
         acc_train = accuracy(model_train['output'], label_batch_, 'train')
         acc_summary = tf.summary.scalar("train_acc", acc_train)
 
-        writer_train = tf.summary.FileWriter(path_checker(summary_path + "train"))
-        saver = tf.train.Saver()
+        writer_train = tf.summary.FileWriter(path_checker(summary_path + "train"), sess.graph)
+
+        saver = tf.train.Saver(max_to_keep=5)
+        tf.add_to_collection("predict", model_train['output'])
 
         # optimizer = tf.train.AdamOptimizer(lr)
         optimizer = tf.train.GradientDescentOptimizer(lr)
@@ -209,6 +222,11 @@ def main(_):
 
                 for epoch_i in range(1, epochs+1):
                     print ('Epoch {}'.format(epoch_i) + '/{}'.format(epochs))
+
+                    if (epoch_i * 10) % (epochs * 2) == 0:    # checkpoint save
+                        saver.save(sess, FLAGS.model_save_path + "my_model",
+                                   global_step=epoch_i * iter_each_epoch)
+
                     for j in range(1, iter_each_epoch + 1):
                         merged = tf.summary.merge([loss_summary, acc_summary])
 
@@ -216,7 +234,8 @@ def main(_):
                         _, summary_train = sess.run([loss_train, acc_train,
                                                      train_op, merged])
 
-                        writer_train.add_summary(summary_train, global_step=epoch_i * j)
+                        writer_train.add_summary(summary_train,
+                                                 global_step=(epoch_i - 1) * iter_each_epoch + j)
 
                         pc_bar.show_process(j, iter_each_epoch, loss_train_, acc_train_)
 
@@ -226,21 +245,22 @@ def main(_):
             print '\ndone! string queue is empty,limit epochs achieved.'
 
         finally:
+            logging.info("train completed!")
+            writer_train.close()
+
+            logging.info('close all threads and stop !')
             coord.request_stop()
             coord.join(threads)     # wait until coord finished , and then go to next step.
-
-        writer_train.close()
-        saver.save(sess, FLAGS.model_save_path)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--model_save_path', '-m',
                         help="final_model_path",
-                        required=True, default='./final_model/')
+                        required=True, default='./model/')
 
     FLAGS, _ = parser.parse_known_args()
 
     tf.app.run()
     # debug_main()
-    logging.info("train completed!")
+
