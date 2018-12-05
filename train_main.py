@@ -2,7 +2,7 @@
 """main interface using for train a unet model (using tensorflow and opencv).
 the purpose of this project is to do the satellite-image segmentation. yuuav building
 
-2018/12/04
+2018/12/05
 tensorflow ==1.11 (cpu)  and tensorflow-gpu (1.4.1)
 python ==2.7.15
 #opencv==3.4.2
@@ -188,7 +188,7 @@ def main(_):
 
         name_batch, image_batch, label_batch = batch_input(tfrecord_path_train)
 
-        label_batch_ = tf.reshape(label_batch, (image_size*image_size, num_classes))
+        label_batch_ = tf.reshape(label_batch, (BS*image_size*image_size, num_classes))
 
         model_train = unet(image_batch, 'train')
 
