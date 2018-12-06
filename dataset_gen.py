@@ -75,7 +75,7 @@ def rgb_label_maker(rgb_label_image, class_num):
     transf_value = np.zeros((256**3), dtype=np.uint8)
 
     for i, colormap in enumerate(VOC_COLORMAP):
-        transf_value[(colormap[0]*256*256 + colormap[1]*256 + colormap[0])] = i
+        transf_value[(colormap[0]*256*256 + colormap[1]*256 + colormap[2])] = i
 
     idx = (rgb_label_image[:, :, 0]*256*256 + rgb_label_image[:, :, 1]*256 + rgb_label_image[:, :, 2])
 

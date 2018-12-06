@@ -192,6 +192,9 @@ def main(_):
 
         model_train = unet(image_batch, 'train')
 
+        with tf.variable_scope('predict'):
+            logistic = model_train['output']
+
         loss_train = total_loss(model_train['output'], label_batch_, 'train')
         loss_summary = tf.summary.scalar("train_loss", loss_train)
 
@@ -201,7 +204,8 @@ def main(_):
         writer_train = tf.summary.FileWriter(path_checker(summary_path + "train"), sess.graph)
 
         saver = tf.train.Saver(max_to_keep=5)
-        tf.add_to_collection("predict", model_train['output'])
+        tf.add_to_collection("predict", logistic)
+        tf.add_to_collection("input", image_batch)
 
         # optimizer = tf.train.AdamOptimizer(lr)
         optimizer = tf.train.GradientDescentOptimizer(lr)
@@ -224,7 +228,7 @@ def main(_):
                     print ('Epoch {}'.format(epoch_i) + '/{}'.format(epochs))
 
                     if (epoch_i * 10) % (epochs * 2) == 0:    # checkpoint save
-                        saver.save(sess, FLAGS.model_save_path + "my_model",
+                        saver.save(sess, FLAGS.model_save_path + "my_model.ckpt",
                                    global_step=epoch_i * iter_each_epoch)
 
                     for j in range(1, iter_each_epoch + 1):
