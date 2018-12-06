@@ -18,6 +18,14 @@ import numpy as np
 
 def netoutput_2_labelmat(net_output, h, w, class_num):
     """reshape network's output, and transform to a 2d label matrix
+    Note:
+        in this cast, the net_output is a 2D matrix, with shape(BS*h*w, num_classes) and the value is 1/0.
+
+        while, if you using  tf.argmax(logits),
+        then the output will be a 2d matrix with shape(BS*h*w, 1) and the value is class label id
+        then this func can be removed.
+
+
     :param
         (h, w): inter, the size of image that need to be visualized
         net_output: a tensor, the output of the network

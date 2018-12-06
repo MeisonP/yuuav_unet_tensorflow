@@ -43,7 +43,7 @@ Note: the main step as follow
     --batch input
     --loss and acc
     --train_op
-    --checkpoint restore if needed
+    --checkpoint restore if needed // save model to .pd format
     --init
     --sess.run
 
@@ -70,6 +70,7 @@ from config import *
 from unet import unet
 from get_batch import batch_input
 import argparse
+from tensorflow.python.framework import graph_util
 
 
 def total_loss(net_output, label, phase):
@@ -136,7 +137,6 @@ def debug_main():
         acc_summary = tf.summary.scalar("train_acc", acc_train)
 
         writer_train = tf.summary.FileWriter(path_checker(summary_path + "train"))
-        saver = tf.train.Saver()
 
         # optimizer = tf.train.AdamOptimizer(lr)
         optimizer = tf.train.GradientDescentOptimizer(lr)
@@ -190,10 +190,7 @@ def main(_):
 
         label_batch_ = tf.reshape(label_batch, (BS*image_size*image_size, num_classes))
 
-        model_train = unet(image_batch, 'train')
-
-        with tf.variable_scope('predict'):
-            logistic = model_train['output']
+        model_train = unet(image_batch, 'train')    # model_train['output'] 's name is "logits"
 
         loss_train = total_loss(model_train['output'], label_batch_, 'train')
         loss_summary = tf.summary.scalar("train_loss", loss_train)
@@ -202,10 +199,6 @@ def main(_):
         acc_summary = tf.summary.scalar("train_acc", acc_train)
 
         writer_train = tf.summary.FileWriter(path_checker(summary_path + "train"), sess.graph)
-
-        saver = tf.train.Saver(max_to_keep=5)
-        tf.add_to_collection("predict", logistic)
-        tf.add_to_collection("input", image_batch)
 
         # optimizer = tf.train.AdamOptimizer(lr)
         optimizer = tf.train.GradientDescentOptimizer(lr)
@@ -219,6 +212,9 @@ def main(_):
 
         coord = tf.train.Coordinator()
         threads = tf.train.start_queue_runners(coord=coord)
+
+        constant_graph = graph_util.convert_variables_to_constants(sess, sess.graph_def, ['/train/logits'])
+
         try:
             while not coord.should_stop():
                 logging.info('sess run for image pass through the network, please waite...')
@@ -226,10 +222,6 @@ def main(_):
 
                 for epoch_i in range(1, epochs+1):
                     print ('Epoch {}'.format(epoch_i) + '/{}'.format(epochs))
-
-                    if (epoch_i * 10) % (epochs * 2) == 0:    # checkpoint save
-                        saver.save(sess, FLAGS.model_save_path + "my_model.ckpt",
-                                   global_step=epoch_i * iter_each_epoch)
 
                     for j in range(1, iter_each_epoch + 1):
                         merged = tf.summary.merge([loss_summary, acc_summary])
@@ -242,6 +234,10 @@ def main(_):
                                                  global_step=(epoch_i - 1) * iter_each_epoch + j)
 
                         pc_bar.show_process(j, iter_each_epoch, loss_train_, acc_train_)
+
+                logging.info('store the model to pd frozen file...')
+                with tf.gfile.FastGFile(FLAGS.model_save_path + 'model.pb', mode='wb') as f:     # save the final model
+                    f.write(constant_graph.SerializeToString())
 
                 coord.request_stop()
 
@@ -261,7 +257,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--model_save_path', '-m',
                         help="final_model_path",
-                        required=True, default='./model/')
+                        required=True, default='./final_model/')
 
     FLAGS, _ = parser.parse_known_args()
 

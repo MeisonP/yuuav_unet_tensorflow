@@ -19,6 +19,8 @@ Note:
 
     # the filter size of last layer :conv2d is [1, 1, class_num]
 
+    the net output is logits
+
 """
 
 
@@ -184,7 +186,7 @@ def unet(input_, op_name):
         net['conv10'] = conv_relu(net['conv9_2'], 1, num_classes, "conv10", False)
         # net['conv10'] = conv_relu(net['conv9_2'], 1, 3, "conv10", False)
 
-        net['output'] = tf.reshape(net['conv10'], (-1, num_classes))
+        net['output'] = tf.reshape(net['conv10'], (-1, num_classes), name='logits')
         # net['output'] = tf.reshape(net['conv10'], (-1, 3))  # the 3 is the rgb channel
 
         logging.info("the model output shape: {}".format(net["output"].shape))

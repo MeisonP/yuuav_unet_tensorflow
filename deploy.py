@@ -12,6 +12,9 @@ Note:
     3. predict
     4. visualization
 
+    there are two way to save and load trained model, here we using frozen model,
+    as the checkpoint are to complex and slow for predict.
+
 """
 
 import tensorflow as tf
@@ -19,13 +22,19 @@ from visualization import *
 import cv2
 
 
-def single_image_predictor(img_, meta_, trained_model_path_, h_, w_, class_num_):
-    """
+def ckpt_single_image_predictor(img_, meta_, trained_model_path_, h_, w_, class_num_):
+    """ restore the variable of model from checkpoint, and predict.
     Note:
         tf.get_collection() will return a list; to get the variable, using tf.get_collection("name")[0]
     :arg
+        img_: a rgb image that wait to predict
+        meta_: the .meta files from checkpoint, and the graph are stored in .meta file
+        trained_model_path_: the checkpoint path
+        h_, w_: the image shape of net input, (BS, h_, w_, class_num)
+        class_num: length of a single distribute vector
 
     :return:
+        return a visualized rgb image
     """
 
     img_ = cv2.resize(img_, (h_, w_), interpolation=cv2.INTER_LINEAR)
@@ -58,6 +67,8 @@ def single_image_predictor(img_, meta_, trained_model_path_, h_, w_, class_num_)
 
         single_ = predict[1, :, :, :]
 
+        single_ = single_.reshape(-1, class_num)
+
         print "visualization"
         mat_2d = netoutput_2_labelmat(single_, h_, w_, class_num_)
 
@@ -76,7 +87,6 @@ if __name__ == "__main__":
 
     img = cv2.imread("test.jpg")
 
-    rgb_image = single_image_predictor(img, meta, trained_model_path, h, w, class_num)
 
     cv2.imwrite('predict_single.png', rgb_image)
 
