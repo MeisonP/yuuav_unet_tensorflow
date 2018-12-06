@@ -1,6 +1,9 @@
 # coding:utf-8
 """the config module of the project: training a unet model.
 
+Note:
+    this config file only for train part
+
 #2018/11/19
 
 include:

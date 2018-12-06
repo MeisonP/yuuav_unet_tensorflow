@@ -181,16 +181,20 @@ def main(_):
     Note:
         the checkpoint only save 20%, 40%, 60%, 80%, 100% step
 
+        # with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
+
     :return:
     """
-    # with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
+
     with tf.Session() as sess:
 
         name_batch, image_batch, label_batch = batch_input(tfrecord_path_train)
 
+        image_tensor_batch = tf.identity(image_batch, name='image_tensor')
+
         label_batch_ = tf.reshape(label_batch, (BS*image_size*image_size, num_classes))
 
-        model_train = unet(image_batch, 'train')    # model_train['output'] 's name is "logits"
+        model_train = unet(image_tensor_batch, 'train')    # model_train['output'] 's name is "logits"
 
         loss_train = total_loss(model_train['output'], label_batch_, 'train')
         loss_summary = tf.summary.scalar("train_loss", loss_train)

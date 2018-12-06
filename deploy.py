@@ -16,10 +16,14 @@ Note:
     as the checkpoint are to complex and slow for predict.
 
 """
+import time
+import logging
 
 import tensorflow as tf
 from visualization import *
 import cv2
+import numpy as np
+from tensorflow.python.platform import gfile
 
 
 def ckpt_single_image_predictor(img_, meta_, trained_model_path_, h_, w_, class_num_):
@@ -59,18 +63,62 @@ def ckpt_single_image_predictor(img_, meta_, trained_model_path_, h_, w_, class_
 
         # print(sess.run(graph.get_tensor_by_name('conv1_2/weights:0')))
 
-        print "begin to run ..."
+        logging.info("predict ...")
 
         predict = sess.run(op_to_restore, feed_dict={input_: img_fd})
 
-        predict = predict.reshape((8, h_, w_, class_num))
+        predict = predict.reshape((8, h_, w_, class_num_))
 
         single_ = predict[1, :, :, :]
 
-        single_ = single_.reshape(-1, class_num)
+        single_ = single_.reshape(-1, class_num_)
 
-        print "visualization"
+        logging.info("visualization ...")
         mat_2d = netoutput_2_labelmat(single_, h_, w_, class_num_)
+
+        rgb_image_ = labelmat_2_rgb(mat_2d)
+
+        return rgb_image_
+
+
+def frozen_predictor(pd_file_path_, single_img, h_, w_, class_num_):
+    """ predictor single image, using trained frozen model file.
+    Note:
+        the input shape of network during triain is (batch_size, h, w, channel),
+        while, the single image is (h, w, channel), so using img_mat= np.expand_dims(single_image, axis=0)
+        to match the network input.
+
+    :arg
+        img_: a rgb image that wait to predict
+        meta_: the .meta files from checkpoint, and the graph are stored in .meta file
+        pd_file_path_: : the frozen model file model.pd path
+        h_, w_: the image shape of net input, (BS, h_, w_, class_num)
+        class_num: length of a single distribute vector
+
+    :return:
+        a rgb image with shape (h_, w_, 3)
+    """
+
+    single_img = cv2.resize(single_img, (h_, w_), interpolation=cv2.INTER_LINEAR)
+
+    with tf.Session() as sess:
+        with gfile.FastGFile(pd_file_path_ + 'model.pb', 'rb') as f:
+            graph_def = tf.GraphDef()
+            graph_def.ParseFromString(f.read())
+            sess.graph.as_default()
+            tf.import_graph_def(graph_def, name='')
+
+        sess.run(tf.global_variables_initializer())
+
+        image_tensor = sess.graph.get_tensor_by_name('image_batch')
+
+        op = sess.graph.get_tensor_by_name('train/logits:0')
+
+        logging.info("predict ...")
+        predict = sess.run(op, feed_dict={image_tensor: np.expand_dims(single_img, axis=0)})
+
+        logging.info("visualization ...")
+        mat_2d = netoutput_2_labelmat(predict, h_, w_, class_num_)
 
         rgb_image_ = labelmat_2_rgb(mat_2d)
 
@@ -79,14 +127,18 @@ def ckpt_single_image_predictor(img_, meta_, trained_model_path_, h_, w_, class_
 
 if __name__ == "__main__":
 
-    meta = "model/my_model-320.meta"
-    trained_model_path = "model/"
-    h = 256
-    w = 256
+    TM = time.strftime("%Y:%m:%d-%H:%M", time.localtime())
+    LOG_FORMAT = "%(asctime)s-%(levelname)s-[line:%(lineno)d] - %(message)s"
+    logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
+    logging.info("**********************mason_p nn_design(%s)***********************" % TM)
+
+    pd_file_path = "./final_model/"
+
+    h, w = 256, 256
     class_num = 21
 
-    img = cv2.imread("test.jpg")
+    img = cv2.imread('test.jpg')
 
+    rgb_image = frozen_predictor(pd_file_path, img, h, w, class_num)
 
-    cv2.imwrite('predict_single.png', rgb_image)
-
+    cv2.imwrite('predict.png', rgb_image)
