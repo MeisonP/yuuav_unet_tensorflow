@@ -130,7 +130,7 @@ def frozen_predictor(pd_file_path_, single_img, h_, w_, class_num_):
         #  just for tmp
         predict = predict.reshape((8, h_, w_, class_num_))
         predict = predict[1, :, :, :]
-        predict = predict.reshape(-1, class_num_)
+        # predict = predict.reshape(-1, class_num_)
 
         logging.info("{}".format(predict.shape))
 

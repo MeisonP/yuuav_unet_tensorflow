@@ -221,10 +221,6 @@ if __name__ == "__main__":
 
     FLAGS, _ = parser.parse_known_args()
 
-
-
-
-
     tf.app.run()
     # debug_main()
 
