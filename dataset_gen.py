@@ -47,6 +47,8 @@ def rgb_label_maker(rgb_label_image, class_num):
         label_1d: is a (h, w) matrix , which's value is the class id. the label_1d then
         transform to label (h, w, num_)
 
+        the label inpput network is not RGB image !!!!!!
+
 
 
     :arg

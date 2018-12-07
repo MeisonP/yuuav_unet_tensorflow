@@ -123,7 +123,7 @@ def path_checker(path):
 
 summary_path = path_checker("./tensorboard/")
 
-batch_normalization = 1
+batch_normalization = True
 num_classes = 20+1
 
 keep_prob = 0.8

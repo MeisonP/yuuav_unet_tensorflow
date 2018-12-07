@@ -45,24 +45,27 @@ def batch_input(record_file, batch_size=BS, class_num=num_classes):
         'image': tf.FixedLenFeature([], tf.string),
         'mask': tf.FixedLenFeature([], tf.string)}
 
-    filename_queue = tf.train.string_input_producer([record_file], num_epochs=epochs)
+    with tf.name_scope("input"):
+        filename_queue = tf.train.string_input_producer([record_file], num_epochs=epochs)
 
-    reader = tf.TFRecordReader()
-    _, serialized_example = reader.read(filename_queue)
+        reader = tf.TFRecordReader()
+        _, serialized_example = reader.read(filename_queue)
 
-    features = tf.parse_single_example(serialized_example, features=feature_dict)
+        features = tf.parse_single_example(serialized_example, features=feature_dict)
 
     nm = features['name']
 
-    img = tf.decode_raw(features['image'], tf.uint8)
-    img = tf.reshape(img, [image_size, image_size, 3])
-    img = (tf.cast(img, tf.float32) - [104.0, 117.0, 123.0]) * (1. / 255)   # ?
-    # img = tf.cast(img, tf.float32) * (1. / 255) - 0.5
+    with tf.name_scope("decode_process"):
+        img = tf.decode_raw(features['image'], tf.uint8)
+        img = tf.reshape(img, [image_size, image_size, 3])
+        img = (tf.cast(img, tf.float32) - [104.0, 117.0, 123.0]) * (1. / 255)   # ?
+        # img = tf.cast(img, tf.float32) * (1. / 255) - 0.5
 
-    mask = tf.decode_raw(features['mask'], tf.uint8)
-    mask = tf.reshape(mask, [image_size, image_size, class_num])
-    # mask = (tf.cast(mask, tf.float32) - [104.0, 117.0, 123.0]) * (1. / 255)
-    # mask = tf.cast(mask, tf.float32) * (1. / 255) - 0.5
+        mask = tf.decode_raw(features['mask'], tf.uint8)
+        mask = tf.reshape(mask, [image_size, image_size, class_num])    # the mask/lable, is not rgb image. is label ID
+
+        # mask = (tf.cast(mask, tf.float32) - [104.0, 117.0, 123.0]) * (1. / 255)
+        # mask = tf.cast(mask, tf.float32) * (1. / 255) - 0.5
 
     name_batch, img_batch, label_batch = tf.train.shuffle_batch([nm, img, mask],
                                                                 batch_size=batch_size,

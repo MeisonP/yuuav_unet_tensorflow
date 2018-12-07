@@ -15,6 +15,9 @@ Note:
     there are two way to save and load trained model, here we using frozen model,
     as the checkpoint are to complex and slow for predict.
 
+    !!! the output of network is (BS*h*w, num_class) with the value float 0 to 1 such as 0.01
+    !!! a distribution that do not pass through softmax
+
 """
 import time
 import logging
@@ -101,6 +104,10 @@ def frozen_predictor(pd_file_path_, single_img, h_, w_, class_num_):
 
     single_img = cv2.resize(single_img, (h_, w_), interpolation=cv2.INTER_LINEAR)
 
+    img_fd = np.zeros((8, h_, w_, 3), dtype=np.uint8)
+    for i in range(8):
+        img_fd[i, :, :] = single_img
+
     with tf.Session() as sess:
         with gfile.FastGFile(pd_file_path_ + 'model.pb', 'rb') as f:
             graph_def = tf.GraphDef()
@@ -110,15 +117,25 @@ def frozen_predictor(pd_file_path_, single_img, h_, w_, class_num_):
 
         sess.run(tf.global_variables_initializer())
 
-        image_tensor = sess.graph.get_tensor_by_name('image_batch')
+        image_tensor = sess.graph.get_tensor_by_name('image_tensor:0')
 
-        op = sess.graph.get_tensor_by_name('train/logits:0')
+        logging.info("{}".format(image_tensor))
+
+        op = sess.graph.get_tensor_by_name('predict/predict:0')
+        logging.info("{}".format(op))
 
         logging.info("predict ...")
-        predict = sess.run(op, feed_dict={image_tensor: np.expand_dims(single_img, axis=0)})
+        predict = sess.run(op, feed_dict={image_tensor: img_fd})
+
+        #  just for tmp
+        predict = predict.reshape((8, h_, w_, class_num_))
+        predict = predict[1, :, :, :]
+        predict = predict.reshape(-1, class_num_)
+
+        logging.info("{}".format(predict.shape))
 
         logging.info("visualization ...")
-        mat_2d = netoutput_2_labelmat(predict, h_, w_, class_num_)
+        mat_2d = predict_2_labelmat(predict, h_, w_)
 
         rgb_image_ = labelmat_2_rgb(mat_2d)
 
