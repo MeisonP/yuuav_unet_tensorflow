@@ -175,7 +175,6 @@ def main(_):
         logging.info("saving sess.graph ...")
         writer_train = tf.summary.FileWriter(path_checker(summary_path + "train"), sess.graph)
 
-
         try:
             while not coord.should_stop():
                 logging.info('sess run for image pass through the network, please waite...')

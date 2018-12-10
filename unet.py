@@ -86,7 +86,7 @@ def pool(input_, ksize, type_, name):
         else:
             pooling = tf.nn.avg_pool(input_, [1, ksize, ksize, 1], strides=[1, ksize, ksize, 1], padding='SAME')
 
-    logging.info("layer {0}, {1}".format(name, pooling.shape))
+    logging.info("layer {0}, {1}, {2}".format(name, pooling.shape, type_))
     return pooling
 
 
@@ -150,23 +150,23 @@ def unet(input_):
     # block 1
     net['conv1_1'] = conv_relu(input_=inputs, ksize=3, filter_num=filters, name="conv1_1")
     net['conv1_2'] = conv_relu(net['conv1_1'], 3, filters, "conv1_2")
-    net['pool1'] = pool(net['conv1_2'], ksize=2, type_=max, name='pool1')
+    net['pool1'] = pool(net['conv1_2'], ksize=2, type_='max', name='pool1')
 
     # block 2
     net['conv2_1'] = conv_relu(net['pool1'], 3, filters * 2, "conv2_1")
     net['conv2_2'] = conv_relu(net['conv2_1'], 3, filters * 2, "conv2_2")
-    net['pool2]'] = pool(net['conv2_2'], 2, max, 'pool2')
+    net['pool2]'] = pool(net['conv2_2'], 2, 'max', 'pool2')
 
     # block 3
     net['conv3_1'] = conv_relu(net['pool2]'], 3, filters * 4, "conv3_1")
     net['conv3_2'] = conv_relu(net['conv3_1'], 3, filters * 4, "conv3_2")
-    net['pool3'] = pool(net['conv3_2'], 2, max, 'pool3')
+    net['pool3'] = pool(net['conv3_2'], 2, 'max', 'pool3')
     net['dropout3'] = dropout(net['pool3'], keep_prob, name='dropout3')
 
     # block 4
     net['conv4_1'] = conv_relu(net['dropout3'], 3, filters * 8, "conv4_1")
     net['conv4_2'] = conv_relu(net['conv4_1'], 3, filters * 8, "conv4_2")
-    net['pool4'] = pool(net['conv4_2'], 2, max, 'pool4')
+    net['pool4'] = pool(net['conv4_2'], 2, 'max', 'pool4')
     net['dropout4'] = dropout(net['pool4'], keep_prob, name='dropout4')
 
 
