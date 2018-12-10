@@ -156,13 +156,13 @@ def main(_):
             acc_train = accuracy(model_train['output'], label_batch_)
             acc_summary = tf.summary.scalar("train_acc", acc_train)
 
-        logging.info("saving sess.graph ...")
-        writer_train = tf.summary.FileWriter(path_checker(summary_path + "train"), sess.graph)
-
         with tf.name_scope('optimizer'):
             # optimizer = tf.train.GradientDescentOptimizer(lr)
             optimizer = tf.train.AdamOptimizer(lr)
             train_op = optimizer.minimize(loss_train)
+
+        logging.info("saving sess.graph ...")
+        writer_train = tf.summary.FileWriter(path_checker(summary_path + "train"), sess.graph)
 
         logging.info('variable initialization ...')
 
