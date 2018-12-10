@@ -161,9 +161,6 @@ def main(_):
             optimizer = tf.train.AdamOptimizer(lr)
             train_op = optimizer.minimize(loss_train)
 
-        logging.info("saving sess.graph ...")
-        writer_train = tf.summary.FileWriter(path_checker(summary_path + "train"), sess.graph)
-
         logging.info('variable initialization ...')
 
         sess.run(tf.local_variables_initializer())
@@ -174,6 +171,10 @@ def main(_):
 
         constant_graph = graph_util.convert_variables_to_constants(sess, sess.graph_def,
                                                                    ["predict/predict"])
+
+        logging.info("saving sess.graph ...")
+        writer_train = tf.summary.FileWriter(path_checker(summary_path + "train"), sess.graph)
+
 
         try:
             while not coord.should_stop():
