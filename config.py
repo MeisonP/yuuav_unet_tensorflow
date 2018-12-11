@@ -140,7 +140,7 @@ queue_capacity = 1000
 
 num_queue_threads = 4
 
-filters = 2    # the filter number of the first conv layer
+filters = 2   # the filter number of the first conv layer
 
 tfrecord_path_train = "./data/train.tfrecords"
 tfrecord_path_val = "./data/val.tfrecords"

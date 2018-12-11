@@ -81,6 +81,11 @@ def total_loss(net_output, label):
         its shape is the same as `labels` except that
         it does not have the last dimension of `labels`.
 
+        in some case, we can also add class_weights to particular class,
+         if class distribution is not fair
+
+         in l2_loss*0.001, the 0.001 is the weight_decay_factor on L2 regularization
+
     :arg
         net_output: a tensor, output after the src image pass through the network
         label: a tensor, shape is same as net_output (x, 3) 3 means RGB channel
@@ -88,12 +93,18 @@ def total_loss(net_output, label):
         a scalar,
 
     """
+    with tf.name_scope("loss"):
+        with tf.name_scope("softmax_cross_entropy"):
+            cross_entropy = tf.nn.softmax_cross_entropy_with_logits(labels=label, logits=net_output)
+            segment_loss = tf.reduce_mean(cross_entropy)
+            # loss_summary = tf.summary.scalar("{}_acc".format(phase), segment_loss)
 
-    with tf.name_scope("softmax_cross_entropy"):
-        cross_entropy = tf.nn.softmax_cross_entropy_with_logits(labels=label, logits=net_output)
-        segment_loss = tf.reduce_mean(cross_entropy)
-        # loss_summary = tf.summary.scalar("{}_acc".format(phase), segment_loss)
-    return segment_loss
+        with tf.name_scope("l2_loss"):
+            weights = [var for var in tf.trainable_variables() if var.name.endswith('weights:0')]
+            l2_loss = tf.add_n([tf.nn.l2_loss(w) for w in weights])
+
+        loss = segment_loss + l2_loss*0.001
+    return loss
 
 
 def accuracy(net_output, label):
@@ -160,10 +171,11 @@ def main(_):
             acc_summary = tf.summary.scalar("train_acc", acc_train)
 
         with tf.name_scope('optimizer'):
-            # optimizer = tf.train.GradientDescentOptimizer(lr)
-            optimizer = tf.train.AdamOptimizer(lr)
+            optimizer = tf.train.GradientDescentOptimizer(lr)
+            # optimizer = tf.train.AdamOptimizer(lr)
             train_op = optimizer.minimize(loss_train)
 
+        merged = tf.summary.merge([loss_summary, acc_summary])
         logging.info('variable initialization ...')
 
         sess.run([tf.local_variables_initializer(), tf.global_variables_initializer()])
@@ -178,7 +190,6 @@ def main(_):
         constant_graph = graph_util.convert_variables_to_constants(sess, sess.graph_def,
                                                                    ["predict/predict",
                                                                     "source_input/image_batch/image_tensor"])
-
         try:
             while not coord.should_stop():
                 logging.info('sess run for image pass through the network, please waite...')
@@ -188,7 +199,6 @@ def main(_):
                     print ('Epoch {}'.format(epoch_i) + '/{}'.format(epochs))
 
                     for j in range(1, iter_each_epoch + 1):
-                        merged = tf.summary.merge([loss_summary, acc_summary])
 
                         run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
                         run_metadata = tf.RunMetadata()
