@@ -36,7 +36,7 @@ import argparse
 import time
 
 
-def rgb_label_maker(rgb_label_image, class_num):
+def rgb_label_input(rgb_label_image, class_num):
     """only for VOC dataset segment, (need change the num_classes, COLORMAP for other dataset)
     transfer the RGB label image(h, w, 3) to input label matrix (h, w, num_classes),
     mapping the rgb value to class distribution
@@ -94,7 +94,7 @@ def rgb_label_maker(rgb_label_image, class_num):
     return label
 
 
-def gray_label_maker(gray_image, class_num):
+def gray_label_input(gray_image, class_num):
     """ the class name and id is changeable
 
     :param
@@ -104,7 +104,7 @@ def gray_label_maker(gray_image, class_num):
         a np array (only has value 0 and 1) with shape (h, w, num_classes), dtype is int64
     """
 
-    h, w, _ = gray_image.shape
+    h, w = gray_image.shape
     label = np.zeros(shape=(h, w, class_num), dtype=np.uint8)
 
     for i in range(h):
@@ -115,7 +115,7 @@ def gray_label_maker(gray_image, class_num):
     return label
 
 
-def create_tfrecord(record_path_, dataset_path_, process_bar_, image_size, class_num):
+def create_tfrecord(record_path_, dataset_path_, process_bar_, image_size, class_num, type_):
     """method, to create a TFrecord file, a byte data files,
     which contains the tf.train.Example() protocol memory block (protocol buffer).
 
@@ -142,7 +142,9 @@ def create_tfrecord(record_path_, dataset_path_, process_bar_, image_size, class
 
     :param
         path_: the path to data, (data/train, or data/test)
-
+        dataset_path_: the path to the src image, (only .jpg or .png format),
+                        and the labels are 2 channel (no matter rgb or gray),
+                        if gray, then the 3 channel are have same value.
 
     :return no return, but
         create a TFRecord file, the binary data are stored with feature construct
@@ -158,6 +160,10 @@ def create_tfrecord(record_path_, dataset_path_, process_bar_, image_size, class
 
         image_path = dataset_path_ + "src/" + name + ".jpg"
         image = cv2.imread(image_path)
+        if np.array(image).shape == ():
+            image_path = dataset_path_ + "src/" + name + ".png"
+            image = cv2.imread(image_path)
+
         image = cv2.resize(image, (image_size, image_size), interpolation=cv2.INTER_LINEAR)
 
         i = count
@@ -167,8 +173,19 @@ def create_tfrecord(record_path_, dataset_path_, process_bar_, image_size, class
 
         label_path = dataset_path_ + "labels/" + name + ".png"
         mask = cv2.imread(label_path)
+        if np.array(mask).shape == ():
+            label_path = dataset_path_ + "labels/" + name + ".jpg"
+            mask = cv2.imread(label_path)
+
         mask = cv2.resize(mask, (image_size, image_size), interpolation=cv2.INTER_LINEAR)
-        mask = rgb_label_maker(mask, class_num)    # output (h, w, num_classes)
+
+        if type_ == "rgb":
+            mask = rgb_label_input(mask, class_num)    # output (h, w, num_classes)
+        else:
+            if type_ == "gray":
+                mask = mask[:, :, 0]
+                mask = gray_label_input(mask, class_num)
+
         mask_raw = mask.tobytes()
 
         feature_dict = {
@@ -254,7 +271,9 @@ def main(_):
     max_steps = dataset_size
 
     process_bar_ = ShowProcess(max_steps, '{}: TFRecords Done!'.format(FLAGS.record_path))
-    create_tfrecord(FLAGS.record_path, FLAGS.dataset_path, process_bar_, FLAGS.image_size, FLAGS.num_classes)
+
+    create_tfrecord(FLAGS.record_path, FLAGS.dataset_path, process_bar_,
+                    FLAGS.image_size, FLAGS.num_classes, FLAGS.label_type)
 
 
 if __name__ == "__main__":
@@ -271,6 +290,9 @@ if __name__ == "__main__":
                         required=True, default="./data/train/")
     parser.add_argument('--record_path', '-r', help='path of the created tfrecords file',
                         required=True, default="./data/train.tfrecords")    # "./data/val.tfrecords"
+
+    parser.add_argument('--label_type', '-t', help='label type, rgb or gray',
+                        required=True, default="rgb", type=str)
 
     FLAGS, _ = parser.parse_known_args()
 

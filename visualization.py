@@ -74,7 +74,7 @@ def predict_2_labelmat_new(predict_softmax, h, w):
     return label_2d
 
 
-def labelmat_2_rgb(labelmat_):
+def labelmat_2_rgb(labelmat_, type_):
     """ transform 2d label matrix to a 3D rgb image
     Note:
         the order of colormap element is [R_value,  G_value, B_value]
@@ -95,7 +95,14 @@ def labelmat_2_rgb(labelmat_):
                     [0, 64, 0], [128, 64, 0], [0, 192, 0], [128, 192, 0],
                     [0, 64, 128]]
 
-    colormap = VOC_COLORMAP
+    # 0:background, 1: building, 2: car, 3: river, 4: green
+    yuuav_colormap = [[0, 0, 0], [192, 0, 128], [128, 128, 128], [0, 64, 128], [0, 129, 0]]
+
+    if type_ == 'voc':
+        colormap = VOC_COLORMAP
+    else:
+        if type_ == 'yuuav':
+            colormap = yuuav_colormap
 
     high, width = labelmat_.shape
 

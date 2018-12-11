@@ -137,7 +137,7 @@ def frozen_predictor(pd_file_path_, single_img, h_, w_, class_num_):
         logging.info("visualization ...")
         mat_2d = predict_2_labelmat_new(predict, h_, w_)
 
-        rgb_image_ = labelmat_2_rgb(mat_2d)
+        rgb_image_ = labelmat_2_rgb(mat_2d, 'voc')
 
         return rgb_image_
 
