@@ -124,23 +124,23 @@ def path_checker(path):
 summary_path = path_checker("./tensorboard/")
 
 batch_normalization = True
-num_classes = 20+1
+num_classes = 2
 
 keep_prob = 0.8
 lr = 0.001
 
 image_size = 256
-dataset_size = 32   # 2913
+dataset_size = 100   # 2913
 
 BS = 2  # batch_size
-epochs = 2    # the epoch mean the count, start from 0, so  epochs=10 means 0-9
+epochs = 1    # the epoch mean the count, start from 0, so  epochs=10 means 0-9
 iter_each_epoch = dataset_size/BS
 iter_max = iter_each_epoch*epochs
 queue_capacity = 1000
 
 num_queue_threads = 4
 
-filters = 8    # the filter number of the first conv layer
+filters = 2    # the filter number of the first conv layer
 
 tfrecord_path_train = "./data/train.tfrecords"
 tfrecord_path_val = "./data/val.tfrecords"
@@ -148,7 +148,7 @@ tfrecord_path_val = "./data/val.tfrecords"
 
 logging.info("\nparameters: batch_normalization={}\nclass_num={}\n"
              "keep_prob={}\nsummary_path={}\nlearning_rate={}\nbatch_size={}\nimage_size={}\ndataset_size={}\n"
-             "epochs={}\niter_each_epoch={}\niter_max={}\nbasic_filter_num\n".
+             "epochs={}\niter_each_epoch={}\niter_max={}\nbasic_filter_num={}\n".
              format(bool(batch_normalization), num_classes,
                     keep_prob, summary_path, lr, BS, image_size, dataset_size,
                     epochs, iter_each_epoch, iter_max, filters))

@@ -84,7 +84,7 @@ def ckpt_single_image_predictor(img_, meta_, trained_model_path_, h_, w_, class_
         return rgb_image_
 
 
-def frozen_predictor(pd_file_path_, single_img, h_, w_, class_num_):
+def frozen_predictor(pd_file_path_, single_img, h_, w_, class_num_, BS):
     """ predictor single image, using trained frozen model file.
     Note:
         the input shape of network during triain is (batch_size, h, w, channel),
@@ -104,9 +104,10 @@ def frozen_predictor(pd_file_path_, single_img, h_, w_, class_num_):
 
     single_img = cv2.resize(single_img, (h_, w_), interpolation=cv2.INTER_LINEAR)
 
-    img_fd = np.zeros((8, h_, w_, 3), dtype=np.uint8)
-    for i in range(8):
-        img_fd[i, :, :] = single_img
+    # tmp
+    img_feed = np.zeros((BS, h_, w_, 3), dtype=np.uint8)
+    for i in range(BS):
+        img_feed[i, :, :] = single_img
 
     with tf.Session() as sess:
         with gfile.FastGFile(pd_file_path_ + 'model.pb', 'rb') as f:
@@ -125,10 +126,10 @@ def frozen_predictor(pd_file_path_, single_img, h_, w_, class_num_):
         logging.info("{}".format(op))
 
         logging.info("predict ...")
-        predict = sess.run(op, feed_dict={image_tensor: img_fd})
+        predict = sess.run(op, feed_dict={image_tensor: img_feed})
 
         #  just for tmp
-        predict = predict.reshape((8, h_, w_, class_num_))
+        predict = predict.reshape((BS, h_, w_, class_num_))
         predict = predict[1, :, :, :]
         # predict = predict.reshape(-1, class_num_)
 
@@ -137,7 +138,9 @@ def frozen_predictor(pd_file_path_, single_img, h_, w_, class_num_):
         logging.info("visualization ...")
         mat_2d = predict_2_labelmat_new(predict, h_, w_)
 
-        rgb_image_ = labelmat_2_rgb(mat_2d, 'voc')
+        cv2.imwrite('predict_without_color.png', mat_2d)
+
+        rgb_image_ = labelmat_2_rgb(mat_2d, 'yuuav')
 
         return rgb_image_
 
@@ -152,10 +155,11 @@ if __name__ == "__main__":
     pd_file_path = "./final_model/"
 
     h, w = 256, 256
-    class_num = 21
+    class_num = 2
+    batch_size = 2
 
-    img = cv2.imread('test.jpg')
+    img = cv2.imread('test.png')
 
-    rgb_image = frozen_predictor(pd_file_path, img, h, w, class_num)
+    rgb_image = frozen_predictor(pd_file_path, img, h, w, class_num, batch_size)
 
     cv2.imwrite('predict.png', rgb_image)

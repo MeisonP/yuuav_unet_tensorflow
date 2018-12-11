@@ -126,7 +126,10 @@ def main(_):
 
 
         in order to convert_variables_to_constants image_tensor,
-        so the out-space have to use tf.name_scope, not tf.name_scope()
+        so the out-space have to use tf.variable_scope, not tf.name_scope()
+
+        in order to  track the cal time and memory consumption of each op during sess.run(),
+        add tf.RunOptions and tf.RunMetadata to sess.run
 
     :return:
     """
@@ -171,8 +174,10 @@ def main(_):
         logging.info("saving sess.graph ...")
         writer_train = tf.summary.FileWriter(path_checker(summary_path + "train"), sess.graph)
 
+        # using for deploy
         constant_graph = graph_util.convert_variables_to_constants(sess, sess.graph_def,
-                                                                   ["predict/predict", ])
+                                                                   ["predict/predict",
+                                                                    "source_input/image_batch/image_tensor"])
 
         try:
             while not coord.should_stop():
@@ -185,12 +190,18 @@ def main(_):
                     for j in range(1, iter_each_epoch + 1):
                         merged = tf.summary.merge([loss_summary, acc_summary])
 
+                        run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+                        run_metadata = tf.RunMetadata()
+
                         loss_train_, acc_train_, \
                         _, summary_train = sess.run([loss_train, acc_train,
-                                                     train_op, merged])
+                                                     train_op, merged],
+                                                    options=run_options, run_metadata=run_metadata)
 
-                        writer_train.add_summary(summary_train,
-                                                 global_step=(epoch_i - 1) * iter_each_epoch + j)
+                        step_ = (epoch_i - 1) * iter_each_epoch + j
+                        writer_train.add_summary(summary_train, global_step=step_)
+                        writer_train.add_run_metadata(run_metadata=run_metadata,
+                                                      tag=("tag%d" % step_), global_step=step_)
 
                         pc_bar.show_process(j, iter_each_epoch, loss_train_, acc_train_)
 
