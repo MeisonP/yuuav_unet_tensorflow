@@ -61,6 +61,11 @@ Note: the main step as follow
     --MomentumOptimizer
     --AdamOptimizer
 
+    tf_debug module is also be contained (only for dev environment debug ).
+    localhost:8080 is changeable .only need to wrap the sess like:
+    from tensorflow.python import debug as tf_debug
+    sess = tf_debug.TensorBoardDebugWrapperSession(sess,"localhost:8080")
+
 
 """
 
@@ -71,6 +76,7 @@ from unet import unet
 from get_batch import batch_input
 import argparse
 from tensorflow.python.framework import graph_util
+from tensorflow.python import debug as tf_debug
 
 
 def total_loss(net_output, label):
@@ -146,6 +152,7 @@ def main(_):
     """
 
     with tf.Session() as sess:
+        sess = tf_debug.TensorBoardDebugWrapperSession(sess, "http://localhost:6006")
 
         with tf.variable_scope("source_input"):
 
