@@ -45,7 +45,7 @@ def conv_relu(input_, ksize, filter_num, name, activation=True):
 
     with tf.variable_scope(name):
         if activation is True:
-            _, h, w, d = input_.shape
+            _, h, w, d = input_.shape  # _ is the batch size
             filter_shape = (ksize, ksize, input_.get_shape()[-1].value, filter_num)
 
             # filter_ = tf.Variable(np.zeros(filter_shape, dtype=np.float32))

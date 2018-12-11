@@ -5,10 +5,11 @@
 python ==2.7.15
 
 Note:
-    the net['output'] is a tensor with shape (h*w, num_classes)
+    the net['output'] is a tensor with shape (BS*h*w, num_classes) without softmax,
+    this module do not cover the sofmax preocess
 
     mainly, contain two step:
-    1. from net['output'] --> label_2d format matrix
+    1. from   softmax process of net['output'] --> label_2d format matrix
     2. label_2d matrix --> 3channel bgr_image using colormap
 
 
@@ -52,9 +53,18 @@ def netoutput_2_labelmat(net_output, h, w, class_num):
     return label_2d
 
 
-def predict_2_labelmat(predict_softmax, h, w):
+def predict_2_labelmat_new(predict_softmax, h, w):
+    """ transform 3d predict output matrix into 2d mat
+    Note:
+        the func accepts 3d predict matrix which after the softmax preocess,
+        so if the net['output'] donot contain the softmax, pls make sure you have place the softmax precess
+        in the deploy main file (deploy.py) before call this func.
+    :arg
+        predict_softax: a tensor, with shape(h, w, class_num), and the value is float type from 0 to 1
+    :return
+        return a tensor, with shape (h, w), and the value are the class ID.the type is same to input
     """
-    """
+
     label_2d = np.zeros((h, w), dtype=np.uint8)
 
     for i in range(h):
@@ -69,6 +79,8 @@ def labelmat_2_rgb(labelmat_):
     Note:
         the order of colormap element is [R_value,  G_value, B_value]
         so the output image is RGB image, not BGR image
+
+        for different dataset, the only thing need to change is the  colormap list
     :param
         labelmat_: a 2D array, whose value donates the label ID
 

@@ -163,17 +163,16 @@ def main(_):
 
         logging.info('variable initialization ...')
 
-        sess.run(tf.local_variables_initializer())
-        sess.run(tf.global_variables_initializer())
+        sess.run([tf.local_variables_initializer(), tf.global_variables_initializer()])
 
         coord = tf.train.Coordinator()
         threads = tf.train.start_queue_runners(coord=coord)
 
-        constant_graph = graph_util.convert_variables_to_constants(sess, sess.graph_def,
-                                                                   ["predict/predict"])
-
         logging.info("saving sess.graph ...")
         writer_train = tf.summary.FileWriter(path_checker(summary_path + "train"), sess.graph)
+
+        constant_graph = graph_util.convert_variables_to_constants(sess, sess.graph_def,
+                                                                   ["predict/predict", ])
 
         try:
             while not coord.should_stop():

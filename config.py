@@ -140,7 +140,7 @@ queue_capacity = 1000
 
 num_queue_threads = 4
 
-filters = 2    # the filter number of the first conv layer
+filters = 8    # the filter number of the first conv layer
 
 tfrecord_path_train = "./data/train.tfrecords"
 tfrecord_path_val = "./data/val.tfrecords"
@@ -148,10 +148,10 @@ tfrecord_path_val = "./data/val.tfrecords"
 
 logging.info("\nparameters: batch_normalization={}\nclass_num={}\n"
              "keep_prob={}\nsummary_path={}\nlearning_rate={}\nbatch_size={}\nimage_size={}\ndataset_size={}\n"
-             "epochs={}\niter_each_epoch={}\niter_max={}\n".
+             "epochs={}\niter_each_epoch={}\niter_max={}\nbasic_filter_num\n".
              format(bool(batch_normalization), num_classes,
                     keep_prob, summary_path, lr, BS, image_size, dataset_size,
-                    epochs, iter_each_epoch, iter_max))
+                    epochs, iter_each_epoch, iter_max, filters))
 
 
 if __name__ == '__main__':

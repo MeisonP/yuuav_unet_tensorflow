@@ -117,7 +117,7 @@ def frozen_predictor(pd_file_path_, single_img, h_, w_, class_num_):
 
         sess.run(tf.global_variables_initializer())
 
-        image_tensor = sess.graph.get_tensor_by_name('image_tensor:0')
+        image_tensor = sess.graph.get_tensor_by_name('source_input/image_batch/image_tensor:0')
 
         logging.info("{}".format(image_tensor))
 
@@ -135,7 +135,7 @@ def frozen_predictor(pd_file_path_, single_img, h_, w_, class_num_):
         logging.info("{}".format(predict.shape))
 
         logging.info("visualization ...")
-        mat_2d = predict_2_labelmat(predict, h_, w_)
+        mat_2d = predict_2_labelmat_new(predict, h_, w_)
 
         rgb_image_ = labelmat_2_rgb(mat_2d)
 
