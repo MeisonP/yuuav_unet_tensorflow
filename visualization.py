@@ -98,6 +98,7 @@ def labelmat_2_rgb(labelmat_, type_):
     # 0:background, 1: building, 2: car, 3: river, 4: green
     yuuav_colormap = [[0, 0, 0], [192, 0, 128], [128, 128, 128], [0, 64, 128], [0, 129, 0]]
 
+    global colormap
     if type_ == 'voc':
         colormap = VOC_COLORMAP
     else:
