@@ -152,7 +152,11 @@ def main(_):
     """
 
     with tf.Session() as sess:
-        sess = tf_debug.TensorBoardDebugWrapperSession(sess, "http://localhost:6006")
+
+        if FLAGS.debug:
+            sess = tf_debug.LocalCLIDebugWrapperSession(sess)
+            # sess = tf_debug.TensorBoardDebugWrapperSession(sess, 'http://0.0.0.0:6006',
+            # send_traceback_and_source_code=False)
 
         with tf.variable_scope("source_input"):
 
@@ -185,7 +189,9 @@ def main(_):
         merged = tf.summary.merge([loss_summary, acc_summary])
         logging.info('variable initialization ...')
 
-        sess.run([tf.local_variables_initializer(), tf.global_variables_initializer()])
+        init_op = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
+
+        sess.run(init_op)
 
         coord = tf.train.Coordinator()
         threads = tf.train.start_queue_runners(coord=coord)
@@ -193,10 +199,11 @@ def main(_):
         logging.info("saving sess.graph ...")
         writer_train = tf.summary.FileWriter(path_checker(summary_path + "train"), sess.graph)
 
-        # using for deploy
+        # using for deploy # has a indicate sess.run ?
         constant_graph = graph_util.convert_variables_to_constants(sess, sess.graph_def,
                                                                    ["predict/predict",
                                                                     "source_input/image_batch/image_tensor"])
+
         try:
             while not coord.should_stop():
                 logging.info('sess run for image pass through the network, please waite...')
@@ -210,9 +217,9 @@ def main(_):
                         run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
                         run_metadata = tf.RunMetadata()
 
-                        loss_train_, acc_train_, \
-                        _, summary_train = sess.run([loss_train, acc_train,
-                                                     train_op, merged],
+                        loss_train_, acc_train_,\
+                        summary_train, _ = sess.run([loss_train, acc_train,
+                                                     merged, train_op],
                                                     options=run_options, run_metadata=run_metadata)
 
                         step_ = (epoch_i - 1) * iter_each_epoch + j
@@ -222,16 +229,17 @@ def main(_):
 
                         pc_bar.show_process(j, iter_each_epoch, loss_train_, acc_train_)
 
-                logging.info('store the model to pd frozen file...')
-                with tf.gfile.FastGFile(FLAGS.model_save_path + 'model.pb', mode='wb') as f:     # save the final model
-                    f.write(constant_graph.SerializeToString())
-
                 coord.request_stop()
 
         except tf.errors.OutOfRangeError:
             print '\ndone! string queue is empty,limit epochs achieved.'
 
         finally:
+
+            logging.info('store the model to pd frozen file...')
+            with tf.gfile.FastGFile(FLAGS.model_save_path + 'model.pb', mode='wb') as f:  # save the final model
+                f.write(constant_graph.SerializeToString())
+
             logging.info("train completed!")
             writer_train.close()
 
@@ -245,8 +253,14 @@ if __name__ == "__main__":
     parser.add_argument('--model_save_path', '-m',
                         help="final_model_path",
                         required=True, default='./final_model/')
-
+    parser.add_argument('--debug',
+                        help="debug model", default=False)
     FLAGS, _ = parser.parse_known_args()
+
+    logging.info('****FLAGES****\n--model_save_path:{}'
+                 '\n--debug{}\n****FLAGES****'.format(FLAGS.model_save_path,
+                                                         FLAGS.debug))
+
 
     tf.app.run()
     # debug_main()

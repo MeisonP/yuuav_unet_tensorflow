@@ -64,9 +64,8 @@ def predict_2_labelmat_new(predict_softmax, h, w):
     :return
         return a tensor, with shape (h, w), and the value are the class ID.the type is same to input
     """
-
+    print predict_softmax.shape
     label_2d = np.zeros((h, w), dtype=np.uint8)
-
     for i in range(h):
         for j in range(w):
             label_2d[i, j] = np.argmax(predict_softmax[i, j, :], axis=0)
@@ -74,7 +73,7 @@ def predict_2_labelmat_new(predict_softmax, h, w):
     return label_2d
 
 
-def labelmat_2_rgb(labelmat_, type_):
+def labelmat_2_rgb(labelmat_, type_cp):
     """ transform 2d label matrix to a 3D rgb image
     Note:
         the order of colormap element is [R_value,  G_value, B_value]
@@ -96,13 +95,13 @@ def labelmat_2_rgb(labelmat_, type_):
                     [0, 64, 128]]
 
     # 0:background, 1: building, 2: car, 3: river, 4: green
-    yuuav_colormap = [[0, 0, 0], [192, 0, 128], [128, 128, 128], [0, 64, 128], [0, 129, 0]]
+    yuuav_colormap = [[0, 0, 0], [192, 128, 0], [128, 128, 128], [0, 64, 128], [0, 129, 0]]
 
     global colormap
-    if type_ == 'voc':
+    if type_cp == 'voc':
         colormap = VOC_COLORMAP
     else:
-        if type_ == 'yuuav':
+        if type_cp == 'yuuav':
             colormap = yuuav_colormap
 
     high, width = labelmat_.shape

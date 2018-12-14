@@ -79,7 +79,7 @@ if __name__ == '__main__':
     image_size = 256
 
     with tf.Session() as sess:
-        names, images, labels = batch_input("./data/train.tfrecords", 8)
+        names, images, labels = batch_input("./data_voc/train.tfrecords", 8)
 
         sess.run(tf.local_variables_initializer())
         sess.run(tf.global_variables_initializer())

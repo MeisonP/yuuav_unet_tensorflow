@@ -21,6 +21,10 @@ Note:
 
     the net output is logits
 
+
+    !!! the op tf.nn.conv2d_transpose consume the significant computation (>90%).
+    so, I use the upsampling_2d to replace it. then got the process speed up.
+
 """
 
 
@@ -102,6 +106,9 @@ def dropout(input_, keep_prob_, name):
 
 def deconv(input_, filter_num, factor, name):
     """ de-convolutional layer, tf.nn.using conv2d_transpose()
+
+    Note:
+        the op tf.nn.conv2d_transpose, consume the significant time.
     """
 
     with tf.variable_scope(name):
@@ -140,10 +147,22 @@ def concat(input_a, input_b, name_, axis_=3):
     return concat_
 
 
+def upsampling_2d(input_, factor, name):
+    with tf.name_scope(name):
+        _, h, w, d = input_.shape
+        # up = tf.image.resize_images()
+        # up = cv2.resize(np.array(input_), (_, h*2, w*2, d), interpolation=cv2.INTER_LINEAR)
+        # up = tf.stack([batch_size_, h * factor, w * factor, d])
+        upsampling = tf.image.resize_images(input_, (h*2, w*2), method=1)
+
+        logging.info("layer {0}, {1}".format(name, upsampling.shape))
+        return upsampling
+
+
 def unet(input_):
 
     inputs = input_
-    logging.info("the input shape: {}".format(inputs.shape))
+    print ("the input shape: {}".format(inputs.shape))
     net = {}
 
     # #############conv
@@ -177,7 +196,8 @@ def unet(input_):
 
     # #############deconv
     # block 6
-    net['upsample6'] = deconv(net['dropout5'], filters * 16, 2, "upsample6")
+    # net['upsample6'] = deconv(net['dropout5'], filters * 16, 2, "upsample6")
+    net['upsample6'] = upsampling_2d(net['dropout5'], 2, "upsample6")
     net['concat6'] = concat(net['upsample6'], net['conv4_2'], axis_=3, name_='concat6')
 
     net['conv6_1'] = conv_relu(net['concat6'], 3, filters * 8, "conv6_1")
@@ -185,7 +205,8 @@ def unet(input_):
     net['dropout6'] = dropout(net['conv6_2'], keep_prob, name='dropout6')
 
     # block 7
-    net['upsample7'] = deconv(net['dropout6'], filters * 8, 2, "upsample7")
+    # net['upsample7'] = deconv(net['dropout6'], filters * 8, 2, "upsample7")
+    net['upsample7'] = upsampling_2d(net['dropout6'], 2, "upsample7")
     net['concat7'] = concat(net['upsample7'], net['conv3_2'], axis_=3, name_='concat7')
 
     net['conv7_1'] = conv_relu(net['concat7'], 3, filters * 4, "conv7_1")
@@ -193,14 +214,16 @@ def unet(input_):
     net['dropout7'] = dropout(net['conv7_2'], keep_prob, name='dropout7')
 
     # block 8
-    net['upsample8'] = deconv(net['dropout7'], filters * 4, 2, "upsample8")
+    # net['upsample8'] = deconv(net['dropout7'], filters * 4, 2, "upsample8")
+    net['upsample8'] = upsampling_2d(net['dropout7'], 2, "upsample8")
     net['concat8'] = concat(net['upsample8'], net['conv2_2'], axis_=3, name_='concat8')
 
     net['conv8_1'] = conv_relu(net['concat8'], 3, filters * 2, "conv8_1")
     net['conv8_2'] = conv_relu(net['conv8_1'], 3, filters * 2, "conv8_2")
 
     # block 9
-    net['upsample9'] = deconv(net['conv8_2'], filters * 2, 2, "upsample9")
+    # net['upsample9'] = deconv(net['conv8_2'], filters * 2, 2, "upsample9")
+    net['upsample9'] = upsampling_2d(net['conv8_2'], 2, "upsample9")
     net['concat9'] = concat(net['upsample9'], net['conv1_2'], axis_=3, name_='concat9')
 
     net['conv9_1'] = conv_relu(net['concat9'], 3, filters, "conv9_1")
@@ -216,9 +239,10 @@ def unet(input_):
         net['output'] = tf.reshape(net['conv10'], (-1, num_classes), name='logits')
     # net['output'] = tf.reshape(net['conv10'], (-1, 3))  # the 3 is the rgb channel
 
-    logging.info("the model output shape: {}".format(net["output"].shape))
+    print ("the model output shape: {}".format(net["output"].shape))
 
     return net
+
 
 
 
