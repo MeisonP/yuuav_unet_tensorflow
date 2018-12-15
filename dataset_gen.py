@@ -36,7 +36,7 @@ import argparse
 import time
 
 
-def rgb_label_input(rgb_label_image, class_num):
+def rgb_label_input(rgb_label_image, class_num, image_size):
     """only for VOC dataset segment, (need change the num_classes, COLORMAP for other dataset)
     transfer the RGB label image(h, w, 3) to input label matrix (h, w, num_classes),
     mapping the rgb value to class distribution
@@ -79,9 +79,13 @@ def rgb_label_input(rgb_label_image, class_num):
     for i, colormap in enumerate(VOC_COLORMAP):
         transf_value[(colormap[0]*256*256 + colormap[1]*256 + colormap[2])] = i
 
-    idx = (rgb_label_image[:, :, 0]*256*256 + rgb_label_image[:, :, 1]*256 + rgb_label_image[:, :, 2])
-
-    label_2d = transf_value[idx]
+    '''idx = (rgb_label_image[:, :, 0]*256*256 + rgb_label_image[:, :, 1]*256 + rgb_label_image[:, :, 2])
+    label_2d = transf_value[idx]'''
+    label_2d = np.zeros((image_size, image_size), dtype=np.uint8)
+    for i in range(image_size):
+        for j in range(image_size):
+            idx = (rgb_label_image[i, j, 0] * 256 * 256 + rgb_label_image[i, j, 1] * 256 + rgb_label_image[i, j, 2])
+            label_2d[i, j] = transf_value[idx]
 
     h, w, _ = rgb_label_image.shape
     label = np.zeros(shape=(h, w, class_num), dtype=np.uint8)
@@ -140,6 +144,8 @@ def create_tfrecord(record_path_, dataset_path_, process_bar_, image_size, class
 
         4) write into tfrecord // TFRecordWriter
 
+
+
     :param
         path_: the path to data, (data/train, or data/test)
         dataset_path_: the path to the src image, (only .jpg or .png format),
@@ -180,7 +186,8 @@ def create_tfrecord(record_path_, dataset_path_, process_bar_, image_size, class
         mask = cv2.resize(mask, (image_size, image_size), interpolation=cv2.INTER_LINEAR)
 
         if type_ == "rgb":
-            mask = rgb_label_input(mask, class_num)    # output (h, w, num_classes)
+            mask = cv2.cvtColor(mask, cv2.COLOR_RGB2BGR)    # only for VOC label which channel/colormap is (R,G,B)
+            mask = rgb_label_input(mask, class_num, image_size)    # output (h, w, num_classes)
         else:
             if type_ == "gray":
                 mask = mask[:, :, 0]

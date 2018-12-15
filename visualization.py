@@ -20,6 +20,7 @@ Note:
 """
 
 import numpy as np
+import cv2
 
 
 def netoutput_2_labelmat(net_output, h, w, class_num):
@@ -106,9 +107,10 @@ def labelmat_2_rgb(labelmat_, type_cp):
 
     high, width = labelmat_.shape
 
-    rgb = np.zeros((high, width, 3), dtype=np.uint8)
+    color_image = np.zeros((high, width, 3), dtype=np.uint8)
 
     for i in range(high):
         for j in range(width):
-            rgb[i, j, :] = colormap[labelmat_[i, j]]
+            color_image[i, j, :] = colormap[labelmat_[i, j]]
+    rgb = cv2.cvtColor(color_image, cv2.COLOR_BGR2RGB)
     return rgb

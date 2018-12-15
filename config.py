@@ -133,7 +133,7 @@ image_size = 256
 dataset_size = 132   # 2913
 
 BS = 4  # batch_size, dataset_size devide BS = a inter
-epochs = 20    # the epoch mean the count, start from 0, so  epochs=10 means 0-9
+epochs = 10    # the epoch mean the count, start from 0, so  epochs=10 means 0-9
 iter_each_epoch = dataset_size/BS
 iter_max = iter_each_epoch*epochs
 queue_capacity = 1000

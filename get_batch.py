@@ -58,7 +58,10 @@ def batch_input(record_file, batch_size=BS, class_num=num_classes):
     with tf.name_scope("decode_process"):
         img = tf.decode_raw(features['image'], tf.uint8)
         img = tf.reshape(img, [image_size, image_size, 3])
+
         img = (tf.cast(img, tf.float32) - [104.0, 117.0, 123.0]) * (1. / 255)   # ?
+        # img = (tf.cast(img, tf.float32))
+
         # img = tf.cast(img, tf.float32) * (1. / 255) - 0.5
 
         mask = tf.decode_raw(features['mask'], tf.uint8)

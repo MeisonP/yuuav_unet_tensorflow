@@ -148,6 +148,9 @@ def main(_):
         in order to  track the cal time and memory consumption of each op during sess.run(),
         add tf.RunOptions and tf.RunMetadata to sess.run
 
+        # the label in the tfrecords queue are with shape (h, w, class_num), so need to be
+        transform to (h*w, class_num) for cal loss
+
     :return:
     """
 
