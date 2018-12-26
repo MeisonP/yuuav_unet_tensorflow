@@ -1,3 +1,4 @@
+# ===================================================================================== #
 # coding:utf-8
 """the config module of the project: training a unet model.
 
@@ -11,9 +12,8 @@ include:
     logging config
     wrap
     parameters
-
-
 """
+# ===================================================================================== #
 
 
 import time

@@ -15,6 +15,7 @@ Note:
 """
 # ===================================================================================== #
 
+
 import tensorflow as tf
 import numpy as np
 from config import image_size, BS, queue_capacity, epochs, num_queue_threads, iter_each_epoch, num_classes

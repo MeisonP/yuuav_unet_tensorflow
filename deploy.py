@@ -20,6 +20,8 @@ Note:
     !!! a distribution that do not pass through softmax
 """
 # ===================================================================================== #
+
+
 import time
 import logging
 import argparse
