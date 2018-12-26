@@ -1,3 +1,4 @@
+# ===================================================================================== #
 # coding:utf-8
 """main interface using for train a unet model (using tensorflow and opencv).
 the purpose of this project is to do the satellite-image segmentation. yuuav building
@@ -55,9 +56,8 @@ Note: the main step as follow
     localhost:8080 is changeable .only need to wrap the sess like:
     from tensorflow.python import debug as tf_debug
     sess = tf_debug.TensorBoardDebugWrapperSession(sess,"localhost:8080")
-
-
 """
+# ===================================================================================== #
 
 
 import tensorflow as tf

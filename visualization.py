@@ -1,4 +1,6 @@
+# ===================================================================================== #
 # coding: utf-8
+
 """ module prepared for deploy.py ;  visualizing the network output,
 
 2018/12/04
@@ -16,8 +18,9 @@ Note:
     ！！！the output of network is (BS*h*w, num_class) with the value float 0 to 1 such as 0.01
 
     the net_output will be a distribute, do not pass through softmax calculation
-
 """
+# ===================================================================================== #
+
 
 import numpy as np
 import cv2

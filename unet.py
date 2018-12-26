@@ -1,3 +1,4 @@
+# ===================================================================================== #
 # coding:utf-8
 """module, define a unet network (supplying some-layer method and net method)
 
@@ -24,8 +25,8 @@ Note:
 
     !!! the op tf.nn.conv2d_transpose consume the significant computation.
     so
-
 """
+# ===================================================================================== #
 
 
 import tensorflow as tf

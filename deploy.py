@@ -1,3 +1,4 @@
+# ===================================================================================== #
 # coding: utf-8
 """a individual module from training, deploy the pre-trained model, and show the predict performance.
 
@@ -17,8 +18,8 @@ Note:
 
     !!! the output of network is (BS*h*w, num_class) with the value float 0 to 1 such as 0.01
     !!! a distribution that do not pass through softmax
-
 """
+# ===================================================================================== #
 import time
 import logging
 import argparse

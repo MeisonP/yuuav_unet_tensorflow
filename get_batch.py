@@ -1,3 +1,4 @@
+# ===================================================================================== #
 # coding:utf-8
 """module, service for network as a batch input. creating a queue-based input pipeline.
 define the core method batch_input, and also can do module testing
@@ -11,9 +12,8 @@ Note:
     coord.join(threads): hang on, and waiting to stop,
                         (the threads will stop after the coord-threads stop)
     tf.local_variables_initializer() is needed, and must before the cooord= and threads=
-
 """
-
+# ===================================================================================== #
 
 import tensorflow as tf
 import numpy as np

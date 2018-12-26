@@ -1,3 +1,4 @@
+# ===================================================================================== #
 # coding:utf-8
 """individual main module, that used to creat tfrecord file.
 for the tensorflow, the raw dataset format is: images files (src is images, label is images)
@@ -23,8 +24,8 @@ Note:
     parser.add_argument('--image_size', help='inter, size of reshape', default=256)
     FLAGS, _ = parser.parse_known_args()    # return  namespace, upparsed args
     tf.app.run()
-
 """
+# ===================================================================================== #
 
 
 import tensorflow as tf
