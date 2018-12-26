@@ -22,8 +22,8 @@ Note:
     the net output is logits
 
 
-    !!! the op tf.nn.conv2d_transpose consume the significant computation (>90%).
-    so, I use the upsampling_2d to replace it. then got the process speed up.
+    !!! the op tf.nn.conv2d_transpose consume the significant computation.
+    so
 
 """
 
@@ -115,14 +115,17 @@ def deconv(input_, filter_num, factor, name):
 
         batch_size_, h, w, d = input_.shape
 
-        filter_shape = (h, w, d, filter_num)
+        # filter_shape = (h, w, d, filter_num)
+        # filter_shape = (h, w, filter_num, d)
+        filter_shape = (3, 3, filter_num, d)
 
         # filter_ = tf.Variable(np.zeros(filter_shape, dtype=np.float32))
         filter_ = tf.get_variable('weights', filter_shape, tf.float32)
         # bias_ = tf.Variable(np.zeros(filter_num, dtype=np.float32))
         bias_ = tf.get_variable('bias', filter_num)
 
-        output_shape_ = tf.stack([batch_size_, h * factor, w * factor, d])
+        # output_shape_ = tf.stack([batch_size_, h * factor, w * factor, d])
+        output_shape_ = tf.TensorShape([batch_size_, h * factor, w * factor, d])
 
         deconv_ = tf.nn.conv2d_transpose(input_, filter_, output_shape=output_shape_,
                                          strides=[1, factor, factor, 1], padding="SAME")
@@ -157,6 +160,75 @@ def upsampling_2d(input_, factor, name):
 
         logging.info("layer {0}, {1}".format(name, upsampling.shape))
         return upsampling
+
+
+def bilinear_upsample_weights(factor, num_outputs):
+    """
+    Create weights matrix for transposed convolution with bilinear filter
+    initialization:
+    ----------
+    Args:
+        factor: Integer, upsampling factor
+        num_outputs: Integer, number of convolution filters
+
+    Returns:
+        outputs: Tensor, [kernel_size, kernel_size, num_outputs]
+    """
+
+    kernel_size = 2 * factor - factor % 2
+
+    weights_kernel = np.zeros((kernel_size,
+                               kernel_size,
+                               num_outputs,
+                               num_outputs), dtype = np.float32)
+
+    rfactor = (kernel_size + 1) // 2
+    if kernel_size % 2 == 1:
+        center = rfactor - 1
+    else:
+        center = rfactor - 0.5
+
+    og = np.ogrid[:kernel_size, :kernel_size]
+    upsample_kernel = (1 - abs(og[0] - center) / rfactor) * (1 - abs(og[1] - center) / rfactor)
+
+    for i in xrange(num_outputs):
+        weights_kernel[:, :, i, i] = upsample_kernel
+
+    init = tf.constant_initializer(value = weights_kernel, dtype = tf.float32)
+    weights = tf.get_variable('weights', weights_kernel.shape, tf.float32, init)
+
+    return weights
+
+
+def deconv_upsample(inputs, factor, name, padding = 'SAME', activation_fn = None):
+    """
+    Convolution Transpose upsampling layer with bilinear interpolation weights:
+    ISSUE: problems with odd scaling factors
+    ----------
+    Args:
+        inputs: Tensor, [batch_size, height, width, channels]
+        factor: Integer, upsampling factor
+        name: String, scope name
+        padding: String, input padding
+        activation_fn: Tensor fn, activation function on output (can be None)
+
+    Returns:
+        outputs: Tensor, [batch_size, height * factor, width * factor, num_filters_in]
+    """
+
+    with tf.variable_scope(name):
+        stride_shape   = [1, factor, factor, 1]
+        input_shape    = tf.shape(inputs)
+        num_filters_in = inputs.get_shape()[-1].value
+        output_shape   = tf.stack([input_shape[0], input_shape[1] * factor, input_shape[2] * factor, num_filters_in])
+
+        weights = bilinear_upsample_weights(factor, num_filters_in)
+        outputs = tf.nn.conv2d_transpose(inputs, weights, output_shape, stride_shape, padding = padding)
+
+        if activation_fn is not None:
+            outputs = activation_fn(outputs)
+
+        return outputs
 
 
 def unet(input_):
@@ -196,8 +268,9 @@ def unet(input_):
 
     # #############deconv
     # block 6
-    # net['upsample6'] = deconv(net['dropout5'], filters * 16, 2, "upsample6")
-    net['upsample6'] = upsampling_2d(net['dropout5'], 2, "upsample6")
+    net['upsample6'] = deconv(net['dropout5'], filters * 16, 2, "upsample6")
+    # net['upsample6'] = deconv_upsample(net['dropout5'], 2, 'upsample6')
+    # net['upsample6'] = upsampling_2d(net['dropout5'], 2, "upsample6")
     net['concat6'] = concat(net['upsample6'], net['conv4_2'], axis_=3, name_='concat6')
 
     net['conv6_1'] = conv_relu(net['concat6'], 3, filters * 8, "conv6_1")
@@ -205,8 +278,9 @@ def unet(input_):
     net['dropout6'] = dropout(net['conv6_2'], keep_prob, name='dropout6')
 
     # block 7
-    # net['upsample7'] = deconv(net['dropout6'], filters * 8, 2, "upsample7")
-    net['upsample7'] = upsampling_2d(net['dropout6'], 2, "upsample7")
+    net['upsample7'] = deconv(net['dropout6'], filters * 8, 2, "upsample7")
+    # net['upsample7'] = deconv_upsample(net['dropout6'], 2, "upsample7")
+    # net['upsample7'] = upsampling_2d(net['dropout6'], 2, "upsample7")
     net['concat7'] = concat(net['upsample7'], net['conv3_2'], axis_=3, name_='concat7')
 
     net['conv7_1'] = conv_relu(net['concat7'], 3, filters * 4, "conv7_1")
@@ -214,16 +288,18 @@ def unet(input_):
     net['dropout7'] = dropout(net['conv7_2'], keep_prob, name='dropout7')
 
     # block 8
-    # net['upsample8'] = deconv(net['dropout7'], filters * 4, 2, "upsample8")
-    net['upsample8'] = upsampling_2d(net['dropout7'], 2, "upsample8")
+    net['upsample8'] = deconv(net['dropout7'], filters * 4, 2, "upsample8")
+    # net['upsample8'] = deconv_upsample(net['dropout7'], 2, "upsample8")
+    # net['upsample8'] = upsampling_2d(net['dropout7'], 2, "upsample8")
     net['concat8'] = concat(net['upsample8'], net['conv2_2'], axis_=3, name_='concat8')
 
     net['conv8_1'] = conv_relu(net['concat8'], 3, filters * 2, "conv8_1")
     net['conv8_2'] = conv_relu(net['conv8_1'], 3, filters * 2, "conv8_2")
 
     # block 9
-    # net['upsample9'] = deconv(net['conv8_2'], filters * 2, 2, "upsample9")
-    net['upsample9'] = upsampling_2d(net['conv8_2'], 2, "upsample9")
+    net['upsample9'] = deconv(net['conv8_2'], filters * 2, 2, "upsample9")
+    # net['upsample9'] = deconv_upsample(net['conv8_2'], 2, "upsample9")
+    # net['upsample9'] = upsampling_2d(net['conv8_2'], 2, "upsample9")
     net['concat9'] = concat(net['upsample9'], net['conv1_2'], axis_=3, name_='concat9')
 
     net['conv9_1'] = conv_relu(net['concat9'], 3, filters, "conv9_1")

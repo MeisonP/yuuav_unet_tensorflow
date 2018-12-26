@@ -171,6 +171,7 @@ def create_tfrecord(record_path_, dataset_path_, process_bar_, image_size, class
             image = cv2.imread(image_path)
 
         image = cv2.resize(image, (image_size, image_size), interpolation=cv2.INTER_LINEAR)
+        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
 
         i = count
         process_bar_. show_process(i)

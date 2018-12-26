@@ -70,6 +70,7 @@ def predict_2_labelmat_new(predict_softmax, h, w):
     for i in range(h):
         for j in range(w):
             label_2d[i, j] = np.argmax(predict_softmax[i, j, :], axis=0)
+            # label_2d = np.argmax(predict_softmax, axis=2) # this do not need to define label_2d before
 
     return label_2d
 
@@ -81,6 +82,8 @@ def labelmat_2_rgb(labelmat_, type_cp):
         so the output image is RGB image, not BGR image
 
         for different dataset, the only thing need to change is the  colormap list
+
+        make sure the value of pixel in [0 - 255], not 256!
     :param
         labelmat_: a 2D array, whose value donates the label ID
 

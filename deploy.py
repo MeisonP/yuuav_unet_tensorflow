@@ -1,5 +1,5 @@
 # coding: utf-8
-"""module, deploy the pre-trained model, and show the predict performance.
+"""a individual module from training, deploy the pre-trained model, and show the predict performance.
 
 2018/12/04
 tensorflow ==1.11
@@ -95,6 +95,7 @@ def frozen_predictor(pd_file_path_, single_img, h_, w_, class_num_, BS):
 
         the predict just from frozen file without softmax process;
         so, the raw predict must be following by softmax, for visualization
+        or the softmax process be placed at train_main, is ok
 
     :arg
         img_: a rgb image that wait to predict
@@ -132,18 +133,18 @@ def frozen_predictor(pd_file_path_, single_img, h_, w_, class_num_, BS):
 
         logging.info("predict ...")
         predict = sess.run(op, feed_dict={image_tensor: img_feed})
-        predict = sess.run(tf.nn.softmax(predict))
+        # predict = sess.run(tf.nn.softmax(predict))
 
         #  just tmp, for single image predict
         predict = predict.reshape((BS, h_, w_, class_num_))
-        predict = predict[1, :, :, :]
+        predict = predict[0, :, :, :]
 
         logging.info("predict output shape: {}".format(predict.shape))
 
         logging.info("visualization ...")
         mat_2d = predict_2_labelmat_new(predict, h_, w_)
 
-        cv2.imwrite('predict_without_color.png', mat_2d)
+        # cv2.imwrite('predict_without_color.png', mat_2d)
 
         rgb_image_ = labelmat_2_rgb(mat_2d, FLAGS.colormap)
 
@@ -153,8 +154,11 @@ def frozen_predictor(pd_file_path_, single_img, h_, w_, class_num_, BS):
 def main(_):
 
     img = cv2.imread('./predict_image/' + FLAGS.img)
+    img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+
     rgb_image = frozen_predictor(pd_file_path, img, h, w, FLAGS.class_num, FLAGS.batch_size)
 
+    rgb_image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2BGR)
     cv2.imwrite('./predict_image/predict.png', rgb_image)
 
 
