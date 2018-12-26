@@ -269,9 +269,6 @@ def debug_main(_):
             print 'next train'
 
 
-
-
-
 def main(_):
     """ main func for train
     Note:
@@ -401,7 +398,6 @@ if __name__ == "__main__":
     logging.info('****FLAGES****\n--model_save_path:{}'
                  '\n--debug{}\n****FLAGES****'.format(FLAGS.model_save_path,
                                                          FLAGS.debug))
-
 
     tf.app.run()
     # debug_main()
